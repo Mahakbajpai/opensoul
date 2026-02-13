@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/slack",
+  "name": "@opensoul/slack",
   "version": "2026.2.6-3",
-  "description": "OpenClaw Slack channel plugin",
+  "description": "OpenSoul Slack channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

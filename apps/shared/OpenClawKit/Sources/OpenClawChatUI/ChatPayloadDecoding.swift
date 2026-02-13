@@ -1,4 +1,4 @@
-import OpenClawKit
+import OpenSoulKit
 import Foundation
 
 enum ChatPayloadDecoding {

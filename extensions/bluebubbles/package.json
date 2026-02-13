@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/bluebubbles",
+  "name": "@opensoul/bluebubbles",
   "version": "2026.2.6-3",
-  "description": "OpenClaw BlueBubbles channel plugin",
+  "description": "OpenSoul BlueBubbles channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ],
@@ -28,7 +28,7 @@
       "order": 75
     },
     "install": {
-      "npmSpec": "@openclaw/bluebubbles",
+      "npmSpec": "@opensoul/bluebubbles",
       "localPath": "extensions/bluebubbles",
       "defaultChoice": "npm"
     }

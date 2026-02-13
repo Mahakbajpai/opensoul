@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/imessage",
+  "name": "@opensoul/imessage",
   "version": "2026.2.6-3",
-  "description": "OpenClaw iMessage channel plugin",
+  "description": "OpenSoul iMessage channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

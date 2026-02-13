@@ -1,4 +1,4 @@
-import OpenClawProtocol
+import OpenSoulProtocol
 import Foundation
 
 extension ChannelsStore {

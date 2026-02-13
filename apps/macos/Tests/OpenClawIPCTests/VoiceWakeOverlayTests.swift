@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import OpenClaw
+@testable import OpenSoul
 
 @Suite struct VoiceWakeOverlayTests {
     @Test func guardTokenDropsWhenNoActive() {

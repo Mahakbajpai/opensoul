@@ -1,4 +1,4 @@
-import OpenClawProtocol
+import OpenSoulProtocol
 import Foundation
 
 struct SkillsStatusReport: Codable {

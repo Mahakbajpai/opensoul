@@ -1,5 +1,5 @@
-import OpenClawKit
-import OpenClawProtocol
+import OpenSoulKit
+import OpenSoulProtocol
 
-typealias ProtoAnyCodable = OpenClawProtocol.AnyCodable
-typealias KitAnyCodable = OpenClawKit.AnyCodable
+typealias ProtoAnyCodable = OpenSoulProtocol.AnyCodable
+typealias KitAnyCodable = OpenSoulKit.AnyCodable

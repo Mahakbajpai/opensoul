@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import OpenSoul
 
 struct VoiceWakeHelpersTests {
     @Test func sanitizeTriggersTrimsAndDropsEmpty() {

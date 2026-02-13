@@ -1,19 +1,19 @@
-import OpenClawProtocol
+import OpenSoulProtocol
 import Foundation
 
-enum OpenClawConfigFile {
-    private static let logger = Logger(subsystem: "ai.openclaw", category: "config")
+enum OpenSoulConfigFile {
+    private static let logger = Logger(subsystem: "ai.opensoul", category: "config")
 
     static func url() -> URL {
-        OpenClawPaths.configURL
+        OpenSoulPaths.configURL
     }
 
     static func stateDirURL() -> URL {
-        OpenClawPaths.stateDirURL
+        OpenSoulPaths.stateDirURL
     }
 
     static func defaultWorkspaceURL() -> URL {
-        OpenClawPaths.workspaceURL
+        OpenSoulPaths.workspaceURL
     }
 
     static func loadDict() -> [String: Any] {

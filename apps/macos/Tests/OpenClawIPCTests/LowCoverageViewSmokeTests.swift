@@ -1,9 +1,9 @@
 import AppKit
-import OpenClawProtocol
+import OpenSoulProtocol
 import SwiftUI
 import Testing
 
-@testable import OpenClaw
+@testable import OpenSoul
 
 @Suite(.serialized)
 @MainActor

@@ -1,4 +1,4 @@
-import OpenClawIPC
+import OpenSoulIPC
 import Foundation
 import Testing
 

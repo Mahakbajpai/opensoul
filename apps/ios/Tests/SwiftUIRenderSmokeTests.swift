@@ -1,8 +1,8 @@
-import OpenClawKit
+import OpenSoulKit
 import SwiftUI
 import Testing
 import UIKit
-@testable import OpenClaw
+@testable import OpenSoul
 
 @Suite struct SwiftUIRenderSmokeTests {
     @MainActor private static func host(_ view: some View) -> UIWindow {
@@ -75,7 +75,7 @@ import UIKit
     }
 
     @Test @MainActor func voiceWakeToastBuildsAViewHierarchy() {
-        let root = VoiceWakeToast(command: "openclaw: do something")
+        let root = VoiceWakeToast(command: "opensoul: do something")
         _ = Self.host(root)
     }
 }

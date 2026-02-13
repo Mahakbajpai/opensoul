@@ -1,4 +1,4 @@
-import OpenClawProtocol
+import OpenSoulProtocol
 
 /// Server-push messages from the gateway websocket.
 ///

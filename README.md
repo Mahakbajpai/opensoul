@@ -6,7 +6,7 @@
 
 OpenSoul 是一个基于 AI 的智能体伴侣项目，支持多渠道消息集成，可以通过 WhatsApp、Telegram、Slack、Discord 等渠道与你交互。
 
-本项目基于 [OpenClaw](https://github.com/openclaw/openclaw)（MIT 许可证）构建。
+本项目基于 [OpenSoul](https://github.com/opensoul/opensoul)（MIT 许可证）构建。
 
 ## 安装
 
@@ -52,4 +52,4 @@ ui/           - Web UI
 
 MIT License — 详见 [LICENSE](LICENSE)
 
-本项目基于 [OpenClaw](https://github.com/openclaw/openclaw) 构建，原始许可证见 [LICENSE-ORIGINAL](LICENSE-ORIGINAL)。
+本项目基于 [OpenSoul](https://github.com/opensoul/opensoul) 构建，原始许可证见 [LICENSE-ORIGINAL](LICENSE-ORIGINAL)。

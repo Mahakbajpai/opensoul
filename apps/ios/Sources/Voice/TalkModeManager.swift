@@ -1,6 +1,6 @@
 import AVFAudio
-import OpenClawKit
-import OpenClawProtocol
+import OpenSoulKit
+import OpenSoulProtocol
 import Foundation
 import Observation
 import OSLog

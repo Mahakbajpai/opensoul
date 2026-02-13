@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/llm-task",
+  "name": "@opensoul/llm-task",
   "version": "2026.2.6-3",
-  "description": "OpenClaw JSON-only LLM task plugin",
+  "description": "OpenSoul JSON-only LLM task plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

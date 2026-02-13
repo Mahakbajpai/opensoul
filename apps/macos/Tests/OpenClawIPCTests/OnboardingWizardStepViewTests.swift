@@ -1,9 +1,9 @@
-import OpenClawProtocol
+import OpenSoulProtocol
 import SwiftUI
 import Testing
-@testable import OpenClaw
+@testable import OpenSoul
 
-private typealias ProtoAnyCodable = OpenClawProtocol.AnyCodable
+private typealias ProtoAnyCodable = OpenSoulProtocol.AnyCodable
 
 @Suite(.serialized)
 @MainActor

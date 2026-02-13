@@ -1,4 +1,4 @@
-package ai.openclaw.android.node
+package ai.opensoul.android.node
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

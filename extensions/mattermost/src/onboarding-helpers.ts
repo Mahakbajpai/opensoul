@@ -1,12 +1,12 @@
-import type { OpenClawConfig, WizardPrompter } from "openclaw/plugin-sdk";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk";
+import type { OpenSoulConfig, WizardPrompter } from "opensoul/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "opensoul/plugin-sdk";
 
 type PromptAccountIdParams = {
-  cfg: OpenClawConfig;
+  cfg: OpenSoulConfig;
   prompter: WizardPrompter;
   label: string;
   currentId?: string;
-  listAccountIds: (cfg: OpenClawConfig) => string[];
+  listAccountIds: (cfg: OpenSoulConfig) => string[];
   defaultAccountId: string;
 };
 

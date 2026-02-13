@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/signal",
+  "name": "@opensoul/signal",
   "version": "2026.2.6-3",
-  "description": "OpenClaw Signal channel plugin",
+  "description": "OpenSoul Signal channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

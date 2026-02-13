@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/copilot-proxy",
+  "name": "@opensoul/copilot-proxy",
   "version": "2026.2.6-3",
-  "description": "OpenClaw Copilot Proxy provider plugin",
+  "description": "OpenSoul Copilot Proxy provider plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

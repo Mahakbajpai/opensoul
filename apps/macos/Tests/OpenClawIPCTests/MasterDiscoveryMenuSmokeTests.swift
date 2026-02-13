@@ -1,7 +1,7 @@
-import OpenClawDiscovery
+import OpenSoulDiscovery
 import SwiftUI
 import Testing
-@testable import OpenClaw
+@testable import OpenSoul
 
 @Suite(.serialized)
 @MainActor

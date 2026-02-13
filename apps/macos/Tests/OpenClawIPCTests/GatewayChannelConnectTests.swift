@@ -1,8 +1,8 @@
-import OpenClawKit
+import OpenSoulKit
 import Foundation
 import os
 import Testing
-@testable import OpenClaw
+@testable import OpenSoul
 
 @Suite struct GatewayChannelConnectTests {
     private enum FakeResponse {

@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/open-prose",
+  "name": "@opensoul/open-prose",
   "version": "2026.2.6-3",
   "description": "OpenProse VM skill pack plugin (slash command + telemetry).",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

@@ -1,4 +1,4 @@
-package ai.openclaw.android
+package ai.opensoul.android
 
 import android.Manifest
 import android.content.Context
@@ -7,35 +7,35 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
-import ai.openclaw.android.chat.ChatController
-import ai.openclaw.android.chat.ChatMessage
-import ai.openclaw.android.chat.ChatPendingToolCall
-import ai.openclaw.android.chat.ChatSessionEntry
-import ai.openclaw.android.chat.OutgoingAttachment
-import ai.openclaw.android.gateway.DeviceAuthStore
-import ai.openclaw.android.gateway.DeviceIdentityStore
-import ai.openclaw.android.gateway.GatewayClientInfo
-import ai.openclaw.android.gateway.GatewayConnectOptions
-import ai.openclaw.android.gateway.GatewayDiscovery
-import ai.openclaw.android.gateway.GatewayEndpoint
-import ai.openclaw.android.gateway.GatewaySession
-import ai.openclaw.android.gateway.GatewayTlsParams
-import ai.openclaw.android.node.CameraCaptureManager
-import ai.openclaw.android.node.LocationCaptureManager
-import ai.openclaw.android.BuildConfig
-import ai.openclaw.android.node.CanvasController
-import ai.openclaw.android.node.ScreenRecordManager
-import ai.openclaw.android.node.SmsManager
-import ai.openclaw.android.protocol.OpenClawCapability
-import ai.openclaw.android.protocol.OpenClawCameraCommand
-import ai.openclaw.android.protocol.OpenClawCanvasA2UIAction
-import ai.openclaw.android.protocol.OpenClawCanvasA2UICommand
-import ai.openclaw.android.protocol.OpenClawCanvasCommand
-import ai.openclaw.android.protocol.OpenClawScreenCommand
-import ai.openclaw.android.protocol.OpenClawLocationCommand
-import ai.openclaw.android.protocol.OpenClawSmsCommand
-import ai.openclaw.android.voice.TalkModeManager
-import ai.openclaw.android.voice.VoiceWakeManager
+import ai.opensoul.android.chat.ChatController
+import ai.opensoul.android.chat.ChatMessage
+import ai.opensoul.android.chat.ChatPendingToolCall
+import ai.opensoul.android.chat.ChatSessionEntry
+import ai.opensoul.android.chat.OutgoingAttachment
+import ai.opensoul.android.gateway.DeviceAuthStore
+import ai.opensoul.android.gateway.DeviceIdentityStore
+import ai.opensoul.android.gateway.GatewayClientInfo
+import ai.opensoul.android.gateway.GatewayConnectOptions
+import ai.opensoul.android.gateway.GatewayDiscovery
+import ai.opensoul.android.gateway.GatewayEndpoint
+import ai.opensoul.android.gateway.GatewaySession
+import ai.opensoul.android.gateway.GatewayTlsParams
+import ai.opensoul.android.node.CameraCaptureManager
+import ai.opensoul.android.node.LocationCaptureManager
+import ai.opensoul.android.BuildConfig
+import ai.opensoul.android.node.CanvasController
+import ai.opensoul.android.node.ScreenRecordManager
+import ai.opensoul.android.node.SmsManager
+import ai.opensoul.android.protocol.OpenSoulCapability
+import ai.opensoul.android.protocol.OpenSoulCameraCommand
+import ai.opensoul.android.protocol.OpenSoulCanvasA2UIAction
+import ai.opensoul.android.protocol.OpenSoulCanvasA2UICommand
+import ai.opensoul.android.protocol.OpenSoulCanvasCommand
+import ai.opensoul.android.protocol.OpenSoulScreenCommand
+import ai.opensoul.android.protocol.OpenSoulLocationCommand
+import ai.opensoul.android.protocol.OpenSoulSmsCommand
+import ai.opensoul.android.voice.TalkModeManager
+import ai.opensoul.android.voice.VoiceWakeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -451,38 +451,38 @@ class NodeRuntime(context: Context) {
 
   private fun buildInvokeCommands(): List<String> =
     buildList {
-      add(OpenClawCanvasCommand.Present.rawValue)
-      add(OpenClawCanvasCommand.Hide.rawValue)
-      add(OpenClawCanvasCommand.Navigate.rawValue)
-      add(OpenClawCanvasCommand.Eval.rawValue)
-      add(OpenClawCanvasCommand.Snapshot.rawValue)
-      add(OpenClawCanvasA2UICommand.Push.rawValue)
-      add(OpenClawCanvasA2UICommand.PushJSONL.rawValue)
-      add(OpenClawCanvasA2UICommand.Reset.rawValue)
-      add(OpenClawScreenCommand.Record.rawValue)
+      add(OpenSoulCanvasCommand.Present.rawValue)
+      add(OpenSoulCanvasCommand.Hide.rawValue)
+      add(OpenSoulCanvasCommand.Navigate.rawValue)
+      add(OpenSoulCanvasCommand.Eval.rawValue)
+      add(OpenSoulCanvasCommand.Snapshot.rawValue)
+      add(OpenSoulCanvasA2UICommand.Push.rawValue)
+      add(OpenSoulCanvasA2UICommand.PushJSONL.rawValue)
+      add(OpenSoulCanvasA2UICommand.Reset.rawValue)
+      add(OpenSoulScreenCommand.Record.rawValue)
       if (cameraEnabled.value) {
-        add(OpenClawCameraCommand.Snap.rawValue)
-        add(OpenClawCameraCommand.Clip.rawValue)
+        add(OpenSoulCameraCommand.Snap.rawValue)
+        add(OpenSoulCameraCommand.Clip.rawValue)
       }
       if (locationMode.value != LocationMode.Off) {
-        add(OpenClawLocationCommand.Get.rawValue)
+        add(OpenSoulLocationCommand.Get.rawValue)
       }
       if (sms.canSendSms()) {
-        add(OpenClawSmsCommand.Send.rawValue)
+        add(OpenSoulSmsCommand.Send.rawValue)
       }
     }
 
   private fun buildCapabilities(): List<String> =
     buildList {
-      add(OpenClawCapability.Canvas.rawValue)
-      add(OpenClawCapability.Screen.rawValue)
-      if (cameraEnabled.value) add(OpenClawCapability.Camera.rawValue)
-      if (sms.canSendSms()) add(OpenClawCapability.Sms.rawValue)
+      add(OpenSoulCapability.Canvas.rawValue)
+      add(OpenSoulCapability.Screen.rawValue)
+      if (cameraEnabled.value) add(OpenSoulCapability.Camera.rawValue)
+      if (sms.canSendSms()) add(OpenSoulCapability.Sms.rawValue)
       if (voiceWakeMode.value != VoiceWakeMode.Off && hasRecordAudioPermission()) {
-        add(OpenClawCapability.VoiceWake.rawValue)
+        add(OpenSoulCapability.VoiceWake.rawValue)
       }
       if (locationMode.value != LocationMode.Off) {
-        add(OpenClawCapability.Location.rawValue)
+        add(OpenSoulCapability.Location.rawValue)
       }
     }
 
@@ -506,7 +506,7 @@ class NodeRuntime(context: Context) {
     val version = resolvedVersionName()
     val release = Build.VERSION.RELEASE?.trim().orEmpty()
     val releaseLabel = if (release.isEmpty()) "unknown" else release
-    return "OpenClawAndroid/$version (Android $releaseLabel; SDK ${Build.VERSION.SDK_INT})"
+    return "OpenSoulAndroid/$version (Android $releaseLabel; SDK ${Build.VERSION.SDK_INT})"
   }
 
   private fun buildClientInfo(clientId: String, clientMode: String): GatewayClientInfo {
@@ -529,7 +529,7 @@ class NodeRuntime(context: Context) {
       caps = buildCapabilities(),
       commands = buildInvokeCommands(),
       permissions = emptyMap(),
-      client = buildClientInfo(clientId = "openclaw-android", clientMode = "node"),
+      client = buildClientInfo(clientId = "opensoul-android", clientMode = "node"),
       userAgent = buildUserAgent(),
     )
   }
@@ -541,7 +541,7 @@ class NodeRuntime(context: Context) {
       caps = emptyList(),
       commands = emptyList(),
       permissions = emptyMap(),
-      client = buildClientInfo(clientId = "openclaw-control-ui", clientMode = "ui"),
+      client = buildClientInfo(clientId = "opensoul-control-ui", clientMode = "ui"),
       userAgent = buildUserAgent(),
     )
   }
@@ -665,7 +665,7 @@ class NodeRuntime(context: Context) {
       val actionId = (userActionObj["id"] as? JsonPrimitive)?.content?.trim().orEmpty().ifEmpty {
         java.util.UUID.randomUUID().toString()
       }
-      val name = OpenClawCanvasA2UIAction.extractActionName(userActionObj) ?: return@launch
+      val name = OpenSoulCanvasA2UIAction.extractActionName(userActionObj) ?: return@launch
 
       val surfaceId =
         (userActionObj["surfaceId"] as? JsonPrimitive)?.content?.trim().orEmpty().ifEmpty { "main" }
@@ -675,7 +675,7 @@ class NodeRuntime(context: Context) {
 
       val sessionKey = resolveMainSessionKey()
       val message =
-        OpenClawCanvasA2UIAction.formatAgentMessage(
+        OpenSoulCanvasA2UIAction.formatAgentMessage(
           actionName = name,
           sessionKey = sessionKey,
           surfaceId = surfaceId,
@@ -709,7 +709,7 @@ class NodeRuntime(context: Context) {
 
       try {
         canvas.eval(
-          OpenClawCanvasA2UIAction.jsDispatchA2UIActionStatus(
+          OpenSoulCanvasA2UIAction.jsDispatchA2UIActionStatus(
             actionId = actionId,
             ok = connected && error == null,
             error = error,
@@ -827,10 +827,10 @@ class NodeRuntime(context: Context) {
 
   private suspend fun handleInvoke(command: String, paramsJson: String?): GatewaySession.InvokeResult {
     if (
-      command.startsWith(OpenClawCanvasCommand.NamespacePrefix) ||
-        command.startsWith(OpenClawCanvasA2UICommand.NamespacePrefix) ||
-        command.startsWith(OpenClawCameraCommand.NamespacePrefix) ||
-        command.startsWith(OpenClawScreenCommand.NamespacePrefix)
+      command.startsWith(OpenSoulCanvasCommand.NamespacePrefix) ||
+        command.startsWith(OpenSoulCanvasA2UICommand.NamespacePrefix) ||
+        command.startsWith(OpenSoulCameraCommand.NamespacePrefix) ||
+        command.startsWith(OpenSoulScreenCommand.NamespacePrefix)
       ) {
       if (!isForeground.value) {
         return GatewaySession.InvokeResult.error(
@@ -839,13 +839,13 @@ class NodeRuntime(context: Context) {
         )
       }
     }
-    if (command.startsWith(OpenClawCameraCommand.NamespacePrefix) && !cameraEnabled.value) {
+    if (command.startsWith(OpenSoulCameraCommand.NamespacePrefix) && !cameraEnabled.value) {
       return GatewaySession.InvokeResult.error(
         code = "CAMERA_DISABLED",
         message = "CAMERA_DISABLED: enable Camera in Settings",
       )
     }
-    if (command.startsWith(OpenClawLocationCommand.NamespacePrefix) &&
+    if (command.startsWith(OpenSoulLocationCommand.NamespacePrefix) &&
       locationMode.value == LocationMode.Off
     ) {
       return GatewaySession.InvokeResult.error(
@@ -855,18 +855,18 @@ class NodeRuntime(context: Context) {
     }
 
     return when (command) {
-      OpenClawCanvasCommand.Present.rawValue -> {
+      OpenSoulCanvasCommand.Present.rawValue -> {
         val url = CanvasController.parseNavigateUrl(paramsJson)
         canvas.navigate(url)
         GatewaySession.InvokeResult.ok(null)
       }
-      OpenClawCanvasCommand.Hide.rawValue -> GatewaySession.InvokeResult.ok(null)
-      OpenClawCanvasCommand.Navigate.rawValue -> {
+      OpenSoulCanvasCommand.Hide.rawValue -> GatewaySession.InvokeResult.ok(null)
+      OpenSoulCanvasCommand.Navigate.rawValue -> {
         val url = CanvasController.parseNavigateUrl(paramsJson)
         canvas.navigate(url)
         GatewaySession.InvokeResult.ok(null)
       }
-      OpenClawCanvasCommand.Eval.rawValue -> {
+      OpenSoulCanvasCommand.Eval.rawValue -> {
         val js =
           CanvasController.parseEvalJs(paramsJson)
             ?: return GatewaySession.InvokeResult.error(
@@ -884,7 +884,7 @@ class NodeRuntime(context: Context) {
           }
         GatewaySession.InvokeResult.ok("""{"result":${result.toJsonString()}}""")
       }
-      OpenClawCanvasCommand.Snapshot.rawValue -> {
+      OpenSoulCanvasCommand.Snapshot.rawValue -> {
         val snapshotParams = CanvasController.parseSnapshotParams(paramsJson)
         val base64 =
           try {
@@ -901,7 +901,7 @@ class NodeRuntime(context: Context) {
           }
         GatewaySession.InvokeResult.ok("""{"format":"${snapshotParams.format.rawValue}","base64":"$base64"}""")
       }
-      OpenClawCanvasA2UICommand.Reset.rawValue -> {
+      OpenSoulCanvasA2UICommand.Reset.rawValue -> {
         val a2uiUrl = resolveA2uiHostUrl()
           ?: return GatewaySession.InvokeResult.error(
             code = "A2UI_HOST_NOT_CONFIGURED",
@@ -917,7 +917,7 @@ class NodeRuntime(context: Context) {
         val res = canvas.eval(a2uiResetJS)
         GatewaySession.InvokeResult.ok(res)
       }
-      OpenClawCanvasA2UICommand.Push.rawValue, OpenClawCanvasA2UICommand.PushJSONL.rawValue -> {
+      OpenSoulCanvasA2UICommand.Push.rawValue, OpenSoulCanvasA2UICommand.PushJSONL.rawValue -> {
         val messages =
           try {
             decodeA2uiMessages(command, paramsJson)
@@ -940,7 +940,7 @@ class NodeRuntime(context: Context) {
         val res = canvas.eval(js)
         GatewaySession.InvokeResult.ok(res)
       }
-      OpenClawCameraCommand.Snap.rawValue -> {
+      OpenSoulCameraCommand.Snap.rawValue -> {
         showCameraHud(message = "Taking photo…", kind = CameraHudKind.Photo)
         triggerCameraFlash()
         val res =
@@ -954,7 +954,7 @@ class NodeRuntime(context: Context) {
         showCameraHud(message = "Photo captured", kind = CameraHudKind.Success, autoHideMs = 1600)
         GatewaySession.InvokeResult.ok(res.payloadJson)
       }
-      OpenClawCameraCommand.Clip.rawValue -> {
+      OpenSoulCameraCommand.Clip.rawValue -> {
         val includeAudio = paramsJson?.contains("\"includeAudio\":true") != false
         if (includeAudio) externalAudioCaptureActive.value = true
         try {
@@ -973,7 +973,7 @@ class NodeRuntime(context: Context) {
           if (includeAudio) externalAudioCaptureActive.value = false
         }
       }
-      OpenClawLocationCommand.Get.rawValue -> {
+      OpenSoulLocationCommand.Get.rawValue -> {
         val mode = locationMode.value
         if (!isForeground.value && mode != LocationMode.Always) {
           return GatewaySession.InvokeResult.error(
@@ -1026,7 +1026,7 @@ class NodeRuntime(context: Context) {
           GatewaySession.InvokeResult.error(code = "LOCATION_UNAVAILABLE", message = message)
         }
       }
-      OpenClawScreenCommand.Record.rawValue -> {
+      OpenSoulScreenCommand.Record.rawValue -> {
         // Status pill mirrors screen recording state so it stays visible without overlay stacking.
         _screenRecordActive.value = true
         try {
@@ -1042,7 +1042,7 @@ class NodeRuntime(context: Context) {
           _screenRecordActive.value = false
         }
       }
-      OpenClawSmsCommand.Send.rawValue -> {
+      OpenSoulSmsCommand.Send.rawValue -> {
         val res = sms.send(paramsJson)
         if (res.ok) {
           GatewaySession.InvokeResult.ok(res.payloadJson)
@@ -1115,7 +1115,7 @@ class NodeRuntime(context: Context) {
     val raw = if (nodeRaw.isNotBlank()) nodeRaw else operatorRaw
     if (raw.isBlank()) return null
     val base = raw.trimEnd('/')
-    return "${base}/__openclaw__/a2ui/?platform=android"
+    return "${base}/__opensoul__/a2ui/?platform=android"
   }
 
   private suspend fun ensureA2uiReady(a2uiUrl: String): Boolean {
@@ -1150,7 +1150,7 @@ class NodeRuntime(context: Context) {
     val jsonlField = (obj["jsonl"] as? JsonPrimitive)?.content?.trim().orEmpty()
     val hasMessagesArray = obj["messages"] is JsonArray
 
-    if (command == OpenClawCanvasA2UICommand.PushJSONL.rawValue || (!hasMessagesArray && jsonlField.isNotBlank())) {
+    if (command == OpenSoulCanvasA2UICommand.PushJSONL.rawValue || (!hasMessagesArray && jsonlField.isNotBlank())) {
       val jsonl = jsonlField
       if (jsonl.isBlank()) throw IllegalArgumentException("INVALID_REQUEST: jsonl required")
       val messages =
@@ -1207,7 +1207,7 @@ private const val a2uiReadyCheckJS: String =
   """
   (() => {
     try {
-      const host = globalThis.openclawA2UI;
+      const host = globalThis.opensoulA2UI;
       return !!host && typeof host.applyMessages === 'function';
     } catch (_) {
       return false;
@@ -1219,8 +1219,8 @@ private const val a2uiResetJS: String =
   """
   (() => {
     try {
-      const host = globalThis.openclawA2UI;
-      if (!host) return { ok: false, error: "missing openclawA2UI" };
+      const host = globalThis.opensoulA2UI;
+      if (!host) return { ok: false, error: "missing opensoulA2UI" };
       return host.reset();
     } catch (e) {
       return { ok: false, error: String(e?.message ?? e) };
@@ -1232,8 +1232,8 @@ private fun a2uiApplyMessagesJS(messagesJson: String): String {
   return """
     (() => {
       try {
-        const host = globalThis.openclawA2UI;
-        if (!host) return { ok: false, error: "missing openclawA2UI" };
+        const host = globalThis.opensoulA2UI;
+        if (!host) return { ok: false, error: "missing opensoulA2UI" };
         const messages = $messagesJson;
         return host.applyMessages(messages);
       } catch (e) {

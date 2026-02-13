@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/google-gemini-cli-auth",
+  "name": "@opensoul/google-gemini-cli-auth",
   "version": "2026.2.6-3",
-  "description": "OpenClaw Gemini CLI OAuth provider plugin",
+  "description": "OpenSoul Gemini CLI OAuth provider plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "opensoul": "workspace:*"
   },
-  "openclaw": {
+  "opensoul": {
     "extensions": [
       "./index.ts"
     ]

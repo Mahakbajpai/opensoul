@@ -1,7 +1,7 @@
-import OpenClawIPC
+import OpenSoulIPC
 import CoreLocation
 import Testing
-@testable import OpenClaw
+@testable import OpenSoul
 
 @Suite(.serialized)
 @MainActor
