@@ -48,21 +48,35 @@ describe("state + config path candidates", () => {
     const home = "/home/test";
     const candidates = resolveDefaultConfigCandidates({} as NodeJS.ProcessEnv, () => home);
     const expected = [
+      // ~/.opensoul (new state dir)
       path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
+      path.join(home, ".opensoul", "openclaw.json"),
+      path.join(home, ".opensoul", "clawdbot.json"),
+      path.join(home, ".opensoul", "moltbot.json"),
       path.join(home, ".opensoul", "moldbot.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "moldbot.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "opensoul.json"),
-      path.join(home, ".opensoul", "moldbot.json"),
+      // ~/.openclaw (legacy)
+      path.join(home, ".openclaw", "opensoul.json"),
+      path.join(home, ".openclaw", "openclaw.json"),
+      path.join(home, ".openclaw", "clawdbot.json"),
+      path.join(home, ".openclaw", "moltbot.json"),
+      path.join(home, ".openclaw", "moldbot.json"),
+      // ~/.clawdbot (legacy)
+      path.join(home, ".clawdbot", "opensoul.json"),
+      path.join(home, ".clawdbot", "openclaw.json"),
+      path.join(home, ".clawdbot", "clawdbot.json"),
+      path.join(home, ".clawdbot", "moltbot.json"),
+      path.join(home, ".clawdbot", "moldbot.json"),
+      // ~/.moltbot (legacy)
+      path.join(home, ".moltbot", "opensoul.json"),
+      path.join(home, ".moltbot", "openclaw.json"),
+      path.join(home, ".moltbot", "clawdbot.json"),
+      path.join(home, ".moltbot", "moltbot.json"),
+      path.join(home, ".moltbot", "moldbot.json"),
+      // ~/.moldbot (legacy)
       path.join(home, ".moldbot", "opensoul.json"),
-      path.join(home, ".moldbot", "opensoul.json"),
-      path.join(home, ".moldbot", "opensoul.json"),
+      path.join(home, ".moldbot", "openclaw.json"),
+      path.join(home, ".moldbot", "clawdbot.json"),
+      path.join(home, ".moldbot", "moltbot.json"),
       path.join(home, ".moldbot", "moldbot.json"),
     ];
     expect(candidates).toEqual(expected);

@@ -5,7 +5,7 @@
 # One-tap: shows status toast
 # If expired: directly opens auth URL
 
-SERVER="${OPENSOUL_SERVER:-${OPENSOUL_SERVER:-l36}}"
+SERVER="${OPENSOUL_SERVER:-${OPENCLAW_SERVER:-l36}}"
 
 STATUS=$(ssh -o ConnectTimeout=5 "$SERVER" '$HOME/opensoul/scripts/claude-auth-status.sh simple' 2>&1)
 
