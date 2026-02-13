@@ -1,12 +1,12 @@
 type StateDirEnvSnapshot = {
   opensoulStateDir: string | undefined;
-  clawdbotStateDir: string | undefined;
+  opensoulLegacyStateDir: string | undefined;
 };
 
 export function snapshotStateDirEnv(): StateDirEnvSnapshot {
   return {
     opensoulStateDir: process.env.OPENSOUL_STATE_DIR,
-    clawdbotStateDir: process.env.CLAWDBOT_STATE_DIR,
+    opensoulLegacyStateDir: process.env.OPENSOUL_STATE_DIR,
   };
 }
 
@@ -16,14 +16,14 @@ export function restoreStateDirEnv(snapshot: StateDirEnvSnapshot): void {
   } else {
     process.env.OPENSOUL_STATE_DIR = snapshot.opensoulStateDir;
   }
-  if (snapshot.clawdbotStateDir === undefined) {
-    delete process.env.CLAWDBOT_STATE_DIR;
+  if (snapshot.opensoulStateDir === undefined) {
+    delete process.env.OPENSOUL_STATE_DIR;
   } else {
-    process.env.CLAWDBOT_STATE_DIR = snapshot.clawdbotStateDir;
+    process.env.OPENSOUL_STATE_DIR = snapshot.opensoulStateDir;
   }
 }
 
 export function setStateDirEnv(stateDir: string): void {
   process.env.OPENSOUL_STATE_DIR = stateDir;
-  delete process.env.CLAWDBOT_STATE_DIR;
+  delete process.env.OPENSOUL_STATE_DIR;
 }

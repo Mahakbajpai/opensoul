@@ -52,10 +52,10 @@ jobs:
 
       - name: Run installer docker tests
         env:
-          CLAWDBOT_INSTALL_URL: https://opensoul.ai/install.sh
-          CLAWDBOT_INSTALL_CLI_URL: https://opensoul.ai/install-cli.sh
-          CLAWDBOT_NO_ONBOARD: "1"
-          CLAWDBOT_INSTALL_SMOKE_SKIP_CLI: "1"
-          CLAWDBOT_INSTALL_SMOKE_SKIP_NONROOT: ${{ github.event_name == 'pull_request' && '1' || '0' }}
-          CLAWDBOT_INSTALL_SMOKE_SKIP_PREVIOUS: "1"
+          OPENSOUL_INSTALL_URL: https://opensoul.ai/install.sh
+          OPENSOUL_INSTALL_CLI_URL: https://opensoul.ai/install-cli.sh
+          OPENSOUL_NO_ONBOARD: "1"
+          OPENSOUL_INSTALL_SMOKE_SKIP_CLI: "1"
+          OPENSOUL_INSTALL_SMOKE_SKIP_NONROOT: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          OPENSOUL_INSTALL_SMOKE_SKIP_PREVIOUS: "1"
         run: pnpm test:install:smoke

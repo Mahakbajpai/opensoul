@@ -6,7 +6,7 @@
 termux-toast "Syncing OpenSoul auth..."
 
 # Run sync on l36 server
-SERVER="${OPENSOUL_SERVER:-${CLAWDBOT_SERVER:-l36}}"
+SERVER="${OPENSOUL_SERVER:-${OPENSOUL_SERVER:-l36}}"
 RESULT=$(ssh "$SERVER" '/home/admin/opensoul/scripts/sync-claude-code-auth.sh' 2>&1)
 EXIT_CODE=$?
 

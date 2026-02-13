@@ -1,4 +1,4 @@
-import type { ClawdbotConfig, RuntimeEnv } from "opensoul/plugin-sdk";
+import type { OpenSoulConfig, RuntimeEnv } from "opensoul/plugin-sdk";
 import {
   buildPendingHistoryContextFromMap,
   recordPendingHistoryEntryIfEnabled,
@@ -322,7 +322,7 @@ function inferPlaceholder(messageType: string): string {
  * Similar to Discord's resolveMediaList().
  */
 async function resolveFeishuMediaList(params: {
-  cfg: ClawdbotConfig;
+  cfg: OpenSoulConfig;
   messageId: string;
   messageType: string;
   content: string;
@@ -507,7 +507,7 @@ export function parseFeishuMessageEvent(
 }
 
 export async function handleFeishuMessage(params: {
-  cfg: ClawdbotConfig;
+  cfg: OpenSoulConfig;
   event: FeishuMessageEvent;
   botOpenId?: string;
   runtime?: RuntimeEnv;

@@ -15,11 +15,11 @@ In the beginning, there was **Warelay** — a sensible name for a WhatsApp gatew
 
 But then came a space lobster.
 
-For a while, the lobster was called **Clawd**, living in a **Clawdbot**. But in January 2026, Anthropic sent a polite email asking for a name change (trademark stuff). And so the lobster did what lobsters do best:
+For a while, the lobster was called **Clawd**, living in a **OpenSoul**. But in January 2026, Anthropic sent a polite email asking for a name change (trademark stuff). And so the lobster did what lobsters do best:
 
 **It molted.**
 
-Shedding its old shell, the creature emerged anew as **Molty**, living in **Moltbot**. But that name never quite rolled off the tongue either...
+Shedding its old shell, the creature emerged anew as **Molty**, living in **OpenSoul**. But that name never quite rolled off the tongue either...
 
 So on January 30, 2026, the lobster molted ONE MORE TIME into its final form: **OpenSoul**.
 
@@ -110,7 +110,7 @@ The molt was chaotic. But the lobster emerged stronger. And funnier.
 
 ### The Final Form (January 30, 2026)
 
-Moltbot never quite rolled off the tongue. And so, at 4am GMT, the team gathered AGAIN.
+OpenSoul never quite rolled off the tongue. And so, at 4am GMT, the team gathered AGAIN.
 
 **The Great OpenSoul Migration** began.
 
@@ -139,7 +139,7 @@ In just 3 hours:
 - "Claw abiding citizens"
 - "Clawntroversy"
 
-**Clawd → Moltbot → OpenSoul**
+**Clawd → OpenSoul → OpenSoul**
 
 _The lobster has molted into its final form._
 

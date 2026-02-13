@@ -15,7 +15,7 @@ export type ExtraGatewayService = {
   label: string;
   detail: string;
   scope: "user" | "system";
-  marker?: "opensoul" | "clawdbot" | "moltbot";
+  marker?: "opensoul" | "opensoul" | "opensoul";
   legacy?: boolean;
 };
 
@@ -23,7 +23,7 @@ export type FindExtraGatewayServicesOptions = {
   deep?: boolean;
 };
 
-const EXTRA_MARKERS = ["opensoul", "clawdbot", "moltbot"] as const;
+const EXTRA_MARKERS = ["opensoul", "opensoul", "opensoul"] as const;
 const execFileAsync = promisify(execFile);
 
 export function renderGatewayServiceCleanupHints(
@@ -135,7 +135,7 @@ function isIgnoredSystemdName(name: string): boolean {
 
 function isLegacyLabel(label: string): boolean {
   const lower = label.toLowerCase();
-  return lower.includes("clawdbot") || lower.includes("moltbot");
+  return lower.includes("opensoul") || lower.includes("opensoul");
 }
 
 async function scanLaunchdDir(params: {
@@ -177,7 +177,7 @@ async function scanLaunchdDir(params: {
         label,
         detail: `plist: ${fullPath}`,
         scope: params.scope,
-        marker: isLegacyLabel(label) ? "clawdbot" : "moltbot",
+        marker: isLegacyLabel(label) ? "opensoul" : "opensoul",
         legacy: true,
       });
       continue;

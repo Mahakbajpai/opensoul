@@ -152,9 +152,9 @@ out to QMD for retrieval. Key points:
     ```bash
     # Pick the same state dir OpenSoul uses
     STATE_DIR="${OPENSOUL_STATE_DIR:-$HOME/.opensoul}"
-    if [ -d "$HOME/.moltbot" ] && [ ! -d "$HOME/.opensoul" ] \
+    if [ -d "$HOME/.opensoul" ] && [ ! -d "$HOME/.opensoul" ] \
       && [ -z "${OPENSOUL_STATE_DIR:-}" ]; then
-      STATE_DIR="$HOME/.moltbot"
+      STATE_DIR="$HOME/.opensoul"
     fi
 
     export XDG_CONFIG_HOME="$STATE_DIR/agents/main/qmd/xdg-config"

@@ -2,7 +2,7 @@ import {
   createReplyPrefixContext,
   createTypingCallbacks,
   logTypingFailure,
-  type ClawdbotConfig,
+  type OpenSoulConfig,
   type RuntimeEnv,
   type ReplyPayload,
 } from "opensoul/plugin-sdk";
@@ -29,7 +29,7 @@ function shouldUseCard(text: string): boolean {
 }
 
 export type CreateFeishuReplyDispatcherParams = {
-  cfg: ClawdbotConfig;
+  cfg: OpenSoulConfig;
   agentId: string;
   runtime: RuntimeEnv;
   chatId: string;
