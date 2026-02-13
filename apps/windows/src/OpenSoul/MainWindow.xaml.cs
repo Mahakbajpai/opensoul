@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,14 +15,22 @@ namespace OpenSoul;
 
 public partial class MainWindow : Window
 {
+    private const int MaxUiListItems = 500;
+    private const int MaxHistoryLimit = 1000;
+    private const int DefaultHistoryLimit = 120;
+
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<MainWindow> _logger;
     private readonly ControlChannel _controlChannel;
     private readonly AppSettingsStore _settingsStore = new();
+    private readonly Dictionary<string, string> _chatDeltaBuffers = new(StringComparer.Ordinal);
 
     private AppSettings _settings = new();
     private bool _isConnected;
     private bool _isShuttingDown;
+    private bool _isLoadingSessions;
+    private bool _isLoadingHistory;
+    private bool _isSyncingSessionPicker;
 
     public MainWindow()
     {
@@ -63,11 +72,21 @@ public partial class MainWindow : Window
         OpenSoulPaths.EnsureDirectories();
 
         _settings = await _settingsStore.LoadAsync();
-        ApplySettingsToUi(_settings);
+        if (_settings.HistoryLimit <= 0)
+        {
+            _settings.HistoryLimit = DefaultHistoryLimit;
+        }
+        _settings.HistoryLimit = Math.Clamp(_settings.HistoryLimit, 1, MaxHistoryLimit);
 
+        ApplySettingsToUi(_settings);
         UpdateRemoteInputsEnabled();
         UpdateActionButtons();
         AppendEvent("Ready");
+
+        if (_settings.AutoConnectOnLaunch)
+        {
+            await ConnectAsync(autoStart: true);
+        }
     }
 
     private async void MainWindow_Closing(object? sender, CancelEventArgs e)
@@ -113,6 +132,15 @@ public partial class MainWindow : Window
         }
     }
 
+    private string CurrentSessionKey
+    {
+        get
+        {
+            var value = SessionKeyTextBox.Text.Trim();
+            return string.IsNullOrWhiteSpace(value) ? "main" : value;
+        }
+    }
+
     private void ModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateRemoteInputsEnabled();
@@ -120,23 +148,40 @@ public partial class MainWindow : Window
 
     private async void ConnectButton_Click(object sender, RoutedEventArgs e)
     {
+        await ConnectAsync(autoStart: false);
+    }
+
+    private async Task ConnectAsync(bool autoStart)
+    {
+        if (_controlChannel.State == ControlChannelState.Connected ||
+            _controlChannel.State == ControlChannelState.Connecting)
+        {
+            return;
+        }
+
         try
         {
-            ConnectButton.IsEnabled = false;
             StatusTextBlock.Text = "Connecting...";
+            UpdateActionButtons();
 
             await SaveSettingsAsync();
 
             if (SelectedMode == ConnectionMode.Local)
             {
                 await _controlChannel.StartAsync(ConnectionMode.Local);
-                AppendEvent("Connect request sent (local)");
+                AppendEvent(autoStart ? "Auto-connect started (local)" : "Connect request sent (local)");
             }
             else
             {
                 await _controlChannel.StartAsync(ConnectionMode.Remote, BuildRemoteOptions());
-                AppendEvent($"Connect request sent (remote: {RemoteUrlTextBox.Text.Trim()})");
+                AppendEvent(
+                    autoStart
+                        ? $"Auto-connect started (remote: {RemoteUrlTextBox.Text.Trim()})"
+                        : $"Connect request sent (remote: {RemoteUrlTextBox.Text.Trim()})");
             }
+
+            await RefreshSessionsAsync();
+            await LoadHistoryAsync(clearTimeline: true);
         }
         catch (Exception ex)
         {
@@ -154,6 +199,7 @@ public partial class MainWindow : Window
         try
         {
             await _controlChannel.StopAsync(stopGateway: SelectedMode == ConnectionMode.Local);
+            _chatDeltaBuffers.Clear();
             AppendEvent("Disconnected");
         }
         catch (Exception ex)
@@ -188,24 +234,199 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void RefreshSessionsButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshSessionsAsync();
+    }
+
+    private async Task RefreshSessionsAsync()
+    {
+        if (!_isConnected || _isLoadingSessions)
+            return;
+
+        _isLoadingSessions = true;
+        UpdateActionButtons();
+
+        try
+        {
+            var payload = await _controlChannel.RequestAsync<JsonElement>(
+                GatewayMethod.SessionsList,
+                new SessionsListParams
+                {
+                    Limit = 100,
+                    IncludeGlobal = true,
+                    IncludeUnknown = true,
+                    IncludeDerivedTitles = true,
+                    IncludeLastMessage = true,
+                });
+
+            if (payload.ValueKind != JsonValueKind.Object ||
+                !payload.TryGetProperty("sessions", out var sessions) ||
+                sessions.ValueKind != JsonValueKind.Array)
+            {
+                AppendEvent("sessions.list returned no sessions");
+                return;
+            }
+
+            var currentSession = CurrentSessionKey;
+            var items = new List<SessionPickerItem>();
+
+            foreach (var row in sessions.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                var key = ReadStringProperty(row, "key");
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+
+                var displayName =
+                    ReadStringProperty(row, "displayName") ??
+                    ReadStringProperty(row, "derivedTitle") ??
+                    ReadStringProperty(row, "label") ??
+                    key;
+
+                var kind = ReadStringProperty(row, "kind");
+                var preview = ReadStringProperty(row, "lastMessagePreview");
+                var displayText = displayName;
+
+                if (!string.IsNullOrWhiteSpace(kind) && kind != "direct")
+                {
+                    displayText = $"[{kind}] {displayText}";
+                }
+                if (!string.IsNullOrWhiteSpace(preview))
+                {
+                    displayText = $"{displayText} - {ToSingleLine(preview)}";
+                }
+
+                items.Add(new SessionPickerItem
+                {
+                    Key = key,
+                    DisplayName = displayText,
+                });
+            }
+
+            _isSyncingSessionPicker = true;
+            SessionPickerComboBox.ItemsSource = items;
+
+            var selected = items.FirstOrDefault(item => string.Equals(item.Key, currentSession, StringComparison.Ordinal));
+            if (selected is not null)
+            {
+                SessionPickerComboBox.SelectedValue = selected.Key;
+            }
+            else
+            {
+                SessionPickerComboBox.SelectedIndex = -1;
+            }
+            _isSyncingSessionPicker = false;
+
+            AppendEvent($"Loaded {items.Count} sessions");
+        }
+        catch (Exception ex)
+        {
+            AppendEvent($"sessions.list failed: {ex.Message}");
+            _logger.LogError(ex, "sessions.list failed");
+        }
+        finally
+        {
+            _isSyncingSessionPicker = false;
+            _isLoadingSessions = false;
+            UpdateActionButtons();
+        }
+    }
+
+    private void SessionPickerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isSyncingSessionPicker)
+            return;
+
+        if (SessionPickerComboBox.SelectedItem is not SessionPickerItem selected)
+            return;
+
+        SessionKeyTextBox.Text = selected.Key;
+        _ = SaveSettingsAsync();
+    }
+
+    private async void LoadHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        await LoadHistoryAsync(clearTimeline: true);
+    }
+
+    private async Task LoadHistoryAsync(bool clearTimeline)
+    {
+        if (!_isConnected || _isLoadingHistory)
+            return;
+
+        _isLoadingHistory = true;
+        UpdateActionButtons();
+
+        var sessionKey = CurrentSessionKey;
+        if (clearTimeline)
+        {
+            ChatListBox.Items.Clear();
+        }
+
+        try
+        {
+            var history = await _controlChannel.RequestAsync<JsonElement>(
+                GatewayMethod.ChatHistory,
+                new ChatHistoryParams
+                {
+                    SessionKey = sessionKey,
+                    Limit = _settings.HistoryLimit,
+                });
+
+            if (history.ValueKind != JsonValueKind.Object ||
+                !history.TryGetProperty("messages", out var messages) ||
+                messages.ValueKind != JsonValueKind.Array)
+            {
+                AppendEvent($"chat.history returned no messages for {sessionKey}");
+                return;
+            }
+
+            var count = 0;
+            foreach (var raw in messages.EnumerateArray())
+            {
+                var (role, text) = ExtractRoleAndText(raw);
+                if (string.IsNullOrWhiteSpace(text))
+                    continue;
+
+                AppendChat($"{role} [{sessionKey}]", text);
+                count++;
+            }
+
+            AppendEvent($"Loaded {count} history messages for {sessionKey}");
+        }
+        catch (Exception ex)
+        {
+            AppendEvent($"chat.history failed: {ex.Message}");
+            _logger.LogError(ex, "chat.history failed");
+        }
+        finally
+        {
+            _isLoadingHistory = false;
+            UpdateActionButtons();
+        }
+    }
+
     private async void SendButton_Click(object sender, RoutedEventArgs e)
     {
         var message = MessageTextBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        var sessionKey = SessionKeyTextBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(sessionKey))
-            sessionKey = "main";
+        var sessionKey = CurrentSessionKey;
 
         try
         {
+            var idempotencyKey = $"win-{Guid.NewGuid():N}";
             await _controlChannel.RequestVoidAsync(
                 GatewayMethod.ChatSend,
                 new ChatSendParams
                 {
                     SessionKey = sessionKey,
                     Message = message,
+                    IdempotencyKey = idempotencyKey,
                 });
 
             AppendChat($"you [{sessionKey}]", message);
@@ -236,7 +457,7 @@ public partial class MainWindow : Window
 
     private void OnControlChannelStateChanged(ControlChannelState state)
     {
-        _ = Dispatcher.InvokeAsync(() =>
+        _ = Dispatcher.InvokeAsync(async () =>
         {
             _isConnected = state == ControlChannelState.Connected;
 
@@ -257,13 +478,19 @@ public partial class MainWindow : Window
                 _ => "Disconnected",
             };
 
+            UpdateRemoteInputsEnabled();
             UpdateActionButtons();
+
+            if (state == ControlChannelState.Connected)
+            {
+                await RefreshSessionsAsync();
+            }
         });
     }
 
     private void OnSnapshotReceived(HelloOk snapshot)
     {
-        _ = Dispatcher.InvokeAsync(() =>
+        _ = Dispatcher.InvokeAsync(async () =>
         {
             var activeSession = snapshot.Snapshot?.ActiveSessionKey;
             if (!string.IsNullOrWhiteSpace(activeSession))
@@ -273,27 +500,81 @@ public partial class MainWindow : Window
 
             var sessionCount = snapshot.Snapshot?.Sessions?.Length ?? 0;
             AppendEvent($"snapshot: protocol={snapshot.ProtocolVersion}, sessions={sessionCount}");
+
+            if (_isConnected)
+            {
+                await RefreshSessionsAsync();
+            }
         });
     }
 
     private void OnChatEventReceived(ChatEvent chat)
     {
-        var role = string.IsNullOrWhiteSpace(chat.Role) ? "assistant" : chat.Role;
-        var content = chat.Content;
-        if (string.IsNullOrWhiteSpace(content))
-            content = chat.Type ?? "(empty chat event)";
+        _ = Dispatcher.InvokeAsync(() =>
+        {
+            var runId = chat.RunId ?? "(unknown-run)";
+            var state = (chat.State ?? "delta").Trim().ToLowerInvariant();
+            var sessionKey = chat.SessionKey ?? CurrentSessionKey;
+            var text = ExtractText(chat.Message);
 
-        AppendChat(role!, content!);
+            switch (state)
+            {
+                case "delta":
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        _chatDeltaBuffers[runId] = text;
+                        AppendChat($"assistant [{sessionKey}]", text);
+                    }
+                    break;
+                case "final":
+                    if (string.IsNullOrWhiteSpace(text) &&
+                        _chatDeltaBuffers.TryGetValue(runId, out var buffered))
+                    {
+                        text = buffered;
+                    }
+                    _chatDeltaBuffers.Remove(runId);
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        AppendChat($"assistant [{sessionKey}]", text);
+                    }
+                    AppendEvent($"chat.final run={ShortId(runId)} seq={chat.Seq}");
+                    break;
+                case "error":
+                    _chatDeltaBuffers.Remove(runId);
+                    AppendEvent($"chat.error run={ShortId(runId)}: {chat.ErrorMessage ?? "unknown error"}");
+                    break;
+                case "aborted":
+                    _chatDeltaBuffers.Remove(runId);
+                    AppendEvent($"chat.aborted run={ShortId(runId)} reason={chat.StopReason ?? "rpc"}");
+                    break;
+                default:
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        AppendChat($"assistant [{sessionKey}]", text);
+                    }
+                    AppendEvent($"chat.{state} run={ShortId(runId)} seq={chat.Seq}");
+                    break;
+            }
+        });
     }
 
     private void OnAgentEventReceived(AgentEvent agent)
     {
-        var role = string.IsNullOrWhiteSpace(agent.Role) ? "agent" : agent.Role;
-        var content = agent.Content;
-        if (string.IsNullOrWhiteSpace(content))
-            content = agent.Type ?? "(empty agent event)";
+        _ = Dispatcher.InvokeAsync(() =>
+        {
+            var stream = string.IsNullOrWhiteSpace(agent.Stream) ? "agent" : agent.Stream;
+            var runId = agent.RunId ?? "(unknown-run)";
+            var text = ExtractText(agent.Data);
 
-        AppendChat(role!, content!);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                AppendChat($"{stream} [{ShortId(runId)}]", text);
+                return;
+            }
+
+            var compact = agent.Data.HasValue ? CompactJson(agent.Data.Value) : "(empty)";
+            AppendEvent($"agent.{stream} run={ShortId(runId)} seq={agent.Seq}: {compact}");
+        });
     }
 
     private void OnShutdownReceived(string reason)
@@ -328,7 +609,9 @@ public partial class MainWindow : Window
     {
         _settings.ConnectionMode = SelectedMode.ToString();
         _settings.RemoteUrl = RemoteUrlTextBox.Text.Trim();
-        _settings.SessionKey = SessionKeyTextBox.Text.Trim();
+        _settings.SessionKey = CurrentSessionKey;
+        _settings.AutoConnectOnLaunch = AutoConnectCheckBox.IsChecked == true;
+        _settings.HistoryLimit = Math.Clamp(_settings.HistoryLimit, 1, MaxHistoryLimit);
         await _settingsStore.SaveAsync(_settings);
     }
 
@@ -341,6 +624,8 @@ public partial class MainWindow : Window
         SessionKeyTextBox.Text = string.IsNullOrWhiteSpace(settings.SessionKey)
             ? "main"
             : settings.SessionKey;
+
+        AutoConnectCheckBox.IsChecked = settings.AutoConnectOnLaunch;
 
         var targetTag = string.Equals(settings.ConnectionMode, "Remote", StringComparison.OrdinalIgnoreCase)
             ? "remote"
@@ -375,19 +660,25 @@ public partial class MainWindow : Window
 
     private void UpdateRemoteInputsEnabled()
     {
-        var enabled = SelectedMode == ConnectionMode.Remote;
-        RemoteUrlTextBox.IsEnabled = enabled;
-        RemoteTokenTextBox.IsEnabled = enabled;
-        RemotePasswordBox.IsEnabled = enabled;
-        RemoteDeviceTokenTextBox.IsEnabled = enabled;
+        var isDisconnected = _controlChannel.State == ControlChannelState.Disconnected;
+        var remoteEnabled = SelectedMode == ConnectionMode.Remote && isDisconnected;
+        RemoteUrlTextBox.IsEnabled = remoteEnabled;
+        RemoteTokenTextBox.IsEnabled = remoteEnabled;
+        RemotePasswordBox.IsEnabled = remoteEnabled;
+        RemoteDeviceTokenTextBox.IsEnabled = remoteEnabled;
+        ModeComboBox.IsEnabled = isDisconnected;
     }
 
     private void UpdateActionButtons()
     {
-        ConnectButton.IsEnabled = !_isConnected;
-        DisconnectButton.IsEnabled = _isConnected;
+        var state = _controlChannel.State;
+        ConnectButton.IsEnabled = state == ControlChannelState.Disconnected;
+        DisconnectButton.IsEnabled = state != ControlChannelState.Disconnected;
         HealthButton.IsEnabled = _isConnected;
         SendButton.IsEnabled = _isConnected;
+        RefreshSessionsButton.IsEnabled = _isConnected && !_isLoadingSessions;
+        LoadHistoryButton.IsEnabled = _isConnected && !_isLoadingHistory;
+        SessionPickerComboBox.IsEnabled = _isConnected && !_isLoadingSessions;
     }
 
     private void AppendChat(string source, string content)
@@ -406,7 +697,7 @@ public partial class MainWindow : Window
         void Append()
         {
             listBox.Items.Add($"{DateTime.Now:HH:mm:ss} {content}");
-            if (listBox.Items.Count > 500)
+            if (listBox.Items.Count > MaxUiListItems)
             {
                 listBox.Items.RemoveAt(0);
             }
@@ -428,6 +719,141 @@ public partial class MainWindow : Window
         }
     }
 
+    private static (string Role, string Text) ExtractRoleAndText(JsonElement raw)
+    {
+        var message = raw;
+        if (raw.ValueKind == JsonValueKind.Object &&
+            raw.TryGetProperty("message", out var nested) &&
+            nested.ValueKind == JsonValueKind.Object)
+        {
+            message = nested;
+        }
+
+        var role = ReadStringProperty(message, "role") ?? "assistant";
+        var text = ExtractText(message) ?? string.Empty;
+        return (role, text);
+    }
+
+    private static string? ExtractText(JsonElement? element)
+    {
+        if (element is null)
+            return null;
+
+        return ExtractText(element.Value);
+    }
+
+    private static string? ExtractText(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Undefined || element.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (element.ValueKind == JsonValueKind.String)
+            return element.GetString();
+
+        if (element.ValueKind != JsonValueKind.Object)
+            return null;
+
+        if (element.TryGetProperty("content", out var content))
+        {
+            var extracted = ExtractContentText(content);
+            if (!string.IsNullOrWhiteSpace(extracted))
+                return extracted;
+        }
+
+        if (element.TryGetProperty("delta", out var delta) &&
+            delta.ValueKind == JsonValueKind.String)
+        {
+            return delta.GetString();
+        }
+
+        if (element.TryGetProperty("text", out var textProp) &&
+            textProp.ValueKind == JsonValueKind.String)
+        {
+            return textProp.GetString();
+        }
+
+        if (element.TryGetProperty("message", out var nestedMessage))
+        {
+            var nested = ExtractText(nestedMessage);
+            if (!string.IsNullOrWhiteSpace(nested))
+                return nested;
+        }
+
+        return null;
+    }
+
+    private static string? ExtractContentText(JsonElement content)
+    {
+        if (content.ValueKind == JsonValueKind.String)
+            return content.GetString();
+
+        if (content.ValueKind != JsonValueKind.Array)
+            return null;
+
+        var sb = new StringBuilder();
+        foreach (var part in content.EnumerateArray())
+        {
+            if (part.ValueKind == JsonValueKind.String)
+            {
+                var value = part.GetString();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    if (sb.Length > 0)
+                        sb.AppendLine();
+                    sb.Append(value);
+                }
+                continue;
+            }
+
+            if (part.ValueKind != JsonValueKind.Object)
+                continue;
+
+            if (part.TryGetProperty("text", out var text) && text.ValueKind == JsonValueKind.String)
+            {
+                var value = text.GetString();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    if (sb.Length > 0)
+                        sb.AppendLine();
+                    sb.Append(value);
+                }
+            }
+        }
+
+        return sb.Length == 0 ? null : sb.ToString();
+    }
+
+    private static string? ReadStringProperty(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return null;
+
+        if (!element.TryGetProperty(propertyName, out var value))
+            return null;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => value.ToString(),
+            _ => null,
+        };
+    }
+
+    private static string CompactJson(JsonElement element)
+    {
+        var json = JsonSerializer.Serialize(element, JsonOptions.Default);
+        if (json.Length <= 240)
+            return json;
+        return json[..240] + " ...";
+    }
+
+    private static string ShortId(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "(none)";
+        return value.Length <= 8 ? value : value[..8];
+    }
+
     private static string ToSingleLine(string value)
     {
         var single = value.Replace("\r", " ").Replace("\n", " ").Trim();
@@ -435,5 +861,11 @@ public partial class MainWindow : Window
             return single;
 
         return single[..600] + " ...";
+    }
+
+    private sealed class SessionPickerItem
+    {
+        public required string Key { get; init; }
+        public required string DisplayName { get; init; }
     }
 }
