@@ -174,6 +174,8 @@ jobs:
           pnpm install --frozen-lockfile --ignore-scripts=false --config.engine-strict=false --config.enable-pre-post-scripts=true
 
       - name: Build dist
+        env:
+          OPENSOUL_A2UI_SKIP_MISSING: "1"
         run: pnpm build
 
       - name: Upload dist artifact
