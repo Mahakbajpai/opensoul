@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="girl-profile.png" alt="OpenSoul" width="480">
+  <img src="girl-profile.png" alt="OpenSoul" width="640">
 </p>
 
 <p align="center">
