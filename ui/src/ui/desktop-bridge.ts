@@ -15,13 +15,6 @@ import type { ResolvedTheme } from "./theme.ts";
 
 // ═══════════ TYPE DEFINITIONS ═══════════
 
-/** Bridge message envelope matching WPF BridgeService protocol. */
-interface BridgeMessage {
-  type: string;
-  payload?: unknown;
-  id?: string;
-}
-
 /** Configuration received from WPF shell on initialization. */
 export interface DesktopInitPayload {
   theme?: string;
@@ -60,9 +53,7 @@ export function isDesktopShell(): boolean {
 
 /** Get the bridge API, or null if not in desktop shell. */
 function getBridge(): DesktopBridgeApi | null {
-  return (
-    (window as unknown as { __opensoul_bridge?: DesktopBridgeApi }).__opensoul_bridge ?? null
-  );
+  return (window as unknown as { __opensoul_bridge?: DesktopBridgeApi }).__opensoul_bridge ?? null;
 }
 
 // ═══════════ SEND TO WPF SHELL ═══════════
@@ -70,56 +61,72 @@ function getBridge(): DesktopBridgeApi | null {
 /** Notify the WPF shell that the Control UI is fully initialized. */
 export function sendShellReady(): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.ready", { version: "1.0" });
 }
 
 /** Notify the WPF shell about gateway connection state changes. */
 export function sendConnectionStateChanged(state: "connected" | "disconnected" | "degraded"): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.connectionStateChanged", { state });
 }
 
 /** Notify the WPF shell about theme changes (from web UI toggle). */
 export function sendThemeChanged(theme: ResolvedTheme): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.themeChanged", { theme });
 }
 
 /** Notify the WPF shell about active tab changes. */
 export function sendTabChanged(tab: Tab, title: string): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.tabChanged", { tab, title });
 }
 
 /** Request a native Windows toast notification. */
 export function sendNotify(title: string, body: string, tag?: string, action?: string): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.notify", { title, body, tag, action });
 }
 
 /** Request the WPF shell to open a URL in the default browser. */
 export function sendOpenExternal(url: string): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.openExternal", { url });
 }
 
 /** Update the tray icon badge count. */
 export function sendBadgeCount(count: number): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.badge", { count });
 }
 
 /** Request a gateway action (restart or stop) from WPF process manager. */
 export function sendGatewayAction(action: "restart" | "stop"): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
   bridge.send("shell.gatewayAction", { action });
 }
 
@@ -147,7 +154,9 @@ let currentListener: DesktopBridgeListener | null = null;
  */
 export function attachDesktopBridgeListener(listener: DesktopBridgeListener): void {
   const bridge = getBridge();
-  if (!bridge) return;
+  if (!bridge) {
+    return;
+  }
 
   currentListener = listener;
 
@@ -219,7 +228,9 @@ export function attachDesktopBridgeListener(listener: DesktopBridgeListener): vo
 /** Detach the current desktop bridge listener. */
 export function detachDesktopBridgeListener(): void {
   const bridge = getBridge();
-  if (!bridge || !currentListener) return;
+  if (!bridge || !currentListener) {
+    return;
+  }
 
   bridge.off("host.init");
   bridge.off("host.themeChanged");

@@ -114,16 +114,16 @@ Group settings by user intent, while preserving all existing controls:
 
 ## 4.4 Feature-to-surface mapping (implementation baseline)
 
-| Existing capability | Primary surface | Secondary surface |
-| --- | --- | --- |
-| Quick status and toggles | Menu Quick Surface | Settings Center |
-| Daily assistant chat | Menu chat panel | Desktop Workbench (Assist) |
-| Channel operations | Desktop Workbench (Operate) | Control UI `/channels` |
-| Sessions and usage analysis | Desktop Workbench (Operate) | Control UI `/sessions`, `/usage` |
-| Cron management | Desktop Workbench (Operate) | Control UI `/cron` |
-| Skills and agents | Desktop Workbench (Build) | Control UI `/skills`, `/agents` |
-| Node and pairing operations | Desktop Workbench (Build/System) | Control UI `/nodes` |
-| Config editing and debug tools | Settings Center (Advanced) | Control UI `/config`, `/debug`, `/logs` |
+| Existing capability            | Primary surface                  | Secondary surface                       |
+| ------------------------------ | -------------------------------- | --------------------------------------- |
+| Quick status and toggles       | Menu Quick Surface               | Settings Center                         |
+| Daily assistant chat           | Menu chat panel                  | Desktop Workbench (Assist)              |
+| Channel operations             | Desktop Workbench (Operate)      | Control UI `/channels`                  |
+| Sessions and usage analysis    | Desktop Workbench (Operate)      | Control UI `/sessions`, `/usage`        |
+| Cron management                | Desktop Workbench (Operate)      | Control UI `/cron`                      |
+| Skills and agents              | Desktop Workbench (Build)        | Control UI `/skills`, `/agents`         |
+| Node and pairing operations    | Desktop Workbench (Build/System) | Control UI `/nodes`                     |
+| Config editing and debug tools | Settings Center (Advanced)       | Control UI `/config`, `/debug`, `/logs` |
 
 ## 5) Key Screen Specs
 
@@ -194,13 +194,13 @@ Group settings by user intent, while preserving all existing controls:
 
 ## 6) Component and State Matrix
 
-| Component | Default | Hover | Focus | Active | Loading | Success | Error | Disabled | Permission |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Global status chip | Shows mode | Elevate | Focus ring | N/A | Pulsing dot | Green badge | Red badge + reason | Muted | Tooltip |
-| Quick toggle row | Label + state | Highlight row | Focus outline | Switch on/off | Spinner for async save | Check toast | Inline error text | Reduced contrast | Shield icon |
-| Action launcher button | Label + icon | Fill +1 | Focus ring | Pressed depth | Spinner icon | Check icon | Warning icon | Muted | Lock icon |
-| Table row (sessions/channels) | Compact row | Row highlight | Outline | Selected fill | Skeleton row | Status chip | Error badge | Muted text | Restricted badge |
-| Destructive action | Secondary style | Warn tint | Warn focus | Confirm step | Busy lock | Undo toast | Sticky alert | Disabled | N/A |
+| Component                     | Default         | Hover         | Focus         | Active        | Loading                | Success     | Error              | Disabled         | Permission       |
+| ----------------------------- | --------------- | ------------- | ------------- | ------------- | ---------------------- | ----------- | ------------------ | ---------------- | ---------------- |
+| Global status chip            | Shows mode      | Elevate       | Focus ring    | N/A           | Pulsing dot            | Green badge | Red badge + reason | Muted            | Tooltip          |
+| Quick toggle row              | Label + state   | Highlight row | Focus outline | Switch on/off | Spinner for async save | Check toast | Inline error text  | Reduced contrast | Shield icon      |
+| Action launcher button        | Label + icon    | Fill +1       | Focus ring    | Pressed depth | Spinner icon           | Check icon  | Warning icon       | Muted            | Lock icon        |
+| Table row (sessions/channels) | Compact row     | Row highlight | Outline       | Selected fill | Skeleton row           | Status chip | Error badge        | Muted text       | Restricted badge |
+| Destructive action            | Secondary style | Warn tint     | Warn focus    | Confirm step  | Busy lock              | Undo toast  | Sticky alert       | Disabled         | N/A              |
 
 ## 7) Token and Visual Rules
 

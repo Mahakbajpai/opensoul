@@ -42,4 +42,28 @@ describe("checkBrowserOrigin", () => {
     });
     expect(result.ok).toBe(false);
   });
+
+  it("accepts desktop virtual host (opensoul.localapp) when gateway is on loopback", () => {
+    const result = checkBrowserOrigin({
+      requestHost: "127.0.0.1:18789",
+      origin: "https://opensoul.localapp",
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("accepts desktop virtual host (opensoul.localapp) when gateway is on localhost", () => {
+    const result = checkBrowserOrigin({
+      requestHost: "localhost:3000",
+      origin: "https://opensoul.localapp",
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects desktop virtual host when gateway is not on loopback", () => {
+    const result = checkBrowserOrigin({
+      requestHost: "gateway.example.com:18789",
+      origin: "https://opensoul.localapp",
+    });
+    expect(result.ok).toBe(false);
+  });
 });

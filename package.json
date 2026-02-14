@@ -7,25 +7,25 @@
     "ai-agent",
     "ai-companion",
     "chatbot",
-    "self-hosted",
-    "whatsapp",
-    "telegram",
+    "cross-platform",
     "discord",
-    "slack",
     "llm",
     "multi-agent",
-    "cross-platform",
-    "typescript"
+    "self-hosted",
+    "slack",
+    "telegram",
+    "typescript",
+    "whatsapp"
   ],
+  "homepage": "https://github.com/NJX-njx/opensoul",
+  "bugs": {
+    "url": "https://github.com/NJX-njx/opensoul/issues"
+  },
   "license": "MIT",
   "author": "NJX-njx",
   "repository": {
     "type": "git",
     "url": "https://github.com/NJX-njx/opensoul.git"
-  },
-  "homepage": "https://github.com/NJX-njx/opensoul",
-  "bugs": {
-    "url": "https://github.com/NJX-njx/opensoul/issues"
   },
   "bin": {
     "opensoul": "opensoul.mjs"
@@ -88,7 +88,6 @@
     "mac:open": "open dist/OpenSoul.app",
     "mac:package": "bash scripts/package-mac-app.sh",
     "mac:restart": "bash scripts/restart-mac.sh",
-    "opensoul:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "opensoul": "node scripts/run-node.mjs",
     "opensoul:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "plugins:sync": "node --import tsx scripts/sync-plugin-versions.ts",

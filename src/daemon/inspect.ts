@@ -15,7 +15,7 @@ export type ExtraGatewayService = {
   label: string;
   detail: string;
   scope: "user" | "system";
-  marker?: "opensoul" | "opensoul" | "opensoul";
+  marker?: "opensoul";
   legacy?: boolean;
 };
 

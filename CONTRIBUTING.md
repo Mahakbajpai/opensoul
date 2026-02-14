@@ -53,6 +53,7 @@ scripts/      — Build and utility scripts
 ## Development Workflow
 
 1. **Create a branch** from `main`:
+
    ```bash
    git checkout -b feat/my-feature
    ```
@@ -60,12 +61,14 @@ scripts/      — Build and utility scripts
 2. **Make your changes** following our [coding style](#coding-style).
 
 3. **Run checks** before committing:
+
    ```bash
    pnpm check
    pnpm test
    ```
 
 4. **Commit** with a clear message:
+
    ```bash
    git commit -m "feat: add support for new channel"
    ```
@@ -89,14 +92,14 @@ scripts/      — Build and utility scripts
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Prefix | Description |
-|--------|-------------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `docs:` | Documentation only |
-| `refactor:` | Code refactoring |
-| `test:` | Adding or updating tests |
-| `chore:` | Maintenance tasks |
+| Prefix      | Description              |
+| ----------- | ------------------------ |
+| `feat:`     | New feature              |
+| `fix:`      | Bug fix                  |
+| `docs:`     | Documentation only       |
+| `refactor:` | Code refactoring         |
+| `test:`     | Adding or updating tests |
+| `chore:`    | Maintenance tasks        |
 
 ## What to Contribute
 

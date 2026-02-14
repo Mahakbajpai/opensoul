@@ -8,13 +8,13 @@ GitHub Discussions categories must be configured manually via the web interface.
 2. Click **Categories** in the left sidebar (or the edit icon next to it)
 3. Click **New category** and add the following:
 
-| Category Name | Emoji | Format | Description |
-|---------------|-------|--------|-------------|
-| **General** | 💬 | Open-ended | General discussion about OpenSoul |
-| **Q&A** | ❓ | Q&A | Ask questions and get answers from the community |
-| **Show and Tell** | 🎉 | Open-ended | Share your setup, integrations, or creative uses |
-| **Feature Ideas** | 💡 | Open-ended | Suggest new features or improvements |
-| **中文社区** | 🇨🇳 | Open-ended | 中文讨论区 |
+| Category Name     | Emoji | Format     | Description                                      |
+| ----------------- | ----- | ---------- | ------------------------------------------------ |
+| **General**       | 💬    | Open-ended | General discussion about OpenSoul                |
+| **Q&A**           | ❓    | Q&A        | Ask questions and get answers from the community |
+| **Show and Tell** | 🎉    | Open-ended | Share your setup, integrations, or creative uses |
+| **Feature Ideas** | 💡    | Open-ended | Suggest new features or improvements             |
+| **中文社区**      | 🇨🇳    | Open-ended | 中文讨论区                                       |
 
 ## Notes
 

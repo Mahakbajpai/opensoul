@@ -54,6 +54,16 @@ function isLoopbackHost(hostname: string): boolean {
   return false;
 }
 
+/**
+ * Virtual hostnames used by platform-specific desktop shells (e.g. WebView2).
+ * These serve local files and are security-equivalent to localhost.
+ */
+const DESKTOP_VIRTUAL_HOSTS = new Set(["opensoul.localapp"]);
+
+function isDesktopVirtualHost(hostname: string): boolean {
+  return DESKTOP_VIRTUAL_HOSTS.has(hostname);
+}
+
 export function checkBrowserOrigin(params: {
   requestHost?: string;
   origin?: string;
@@ -78,6 +88,13 @@ export function checkBrowserOrigin(params: {
 
   const requestHostname = resolveHostName(requestHost);
   if (isLoopbackHost(parsedOrigin.hostname) && isLoopbackHost(requestHostname)) {
+    return { ok: true };
+  }
+
+  // Allow desktop virtual host origins (e.g. WebView2's opensoul.localapp)
+  // when the gateway is running on loopback. These virtual hosts serve local
+  // files from the filesystem and are security-equivalent to localhost.
+  if (isDesktopVirtualHost(parsedOrigin.hostname) && isLoopbackHost(requestHostname)) {
     return { ok: true };
   }
 

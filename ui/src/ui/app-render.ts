@@ -134,7 +134,7 @@ export function renderApp(state: AppViewState) {
           </button>
           <div class="brand">
             <div class="brand-logo">
-              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="OpenSoul" />
+              <img src=${basePath ? `${basePath}/logo.jpg` : "/logo.jpg"} alt="OpenSoul" style="border-radius:50%;" />
             </div>
             <div class="brand-text">
               <div class="brand-title">OPENSOUL</div>

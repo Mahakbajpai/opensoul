@@ -107,8 +107,6 @@ async function main() {
     ...process.env,
     OPENSOUL_CONFIG_PATH: configPath,
     OPENSOUL_STATE_DIR: stateDir,
-    OPENSOUL_CONFIG_PATH: configPath,
-    OPENSOUL_STATE_DIR: stateDir,
     ZAI_API_KEY: zaiKey,
     Z_AI_API_KEY: "",
   };

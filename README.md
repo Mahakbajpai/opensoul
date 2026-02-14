@@ -40,33 +40,37 @@ Whether you need an **emotional companion** for daily life or a **productivity c
 ## Features
 
 ### 🌐 30+ Messaging Channels
+
 Connect your AI companion to the apps you already use — no new app to install.
 
-| Category | Channels |
-|----------|----------|
-| **Messaging** | WhatsApp · Telegram · Signal · iMessage · Matrix · Mattermost · Zalo |
-| **Collaboration** | Slack · Discord · Microsoft Teams · Lark (Feishu) · LINE |
-| **Voice** | Voice Call (built-in TTS/STT) |
-| **Web** | Web Control UI · REST API · WebSocket |
+| Category          | Channels                                                             |
+| ----------------- | -------------------------------------------------------------------- |
+| **Messaging**     | WhatsApp · Telegram · Signal · iMessage · Matrix · Mattermost · Zalo |
+| **Collaboration** | Slack · Discord · Microsoft Teams · Lark (Feishu) · LINE             |
+| **Voice**         | Voice Call (built-in TTS/STT)                                        |
+| **Web**           | Web Control UI · REST API · WebSocket                                |
 
 ### 🧠 Intelligent Agent Core
+
 - **Multi-model support** — OpenAI, Anthropic, AWS Bedrock, Ollama (local), and more
 - **Memory system** — Long-term memory with vector search (LanceDB)
 - **Multi-agent routing** — Session isolation and intelligent routing
 - **Tool use** — Agents can browse the web, run code, manage files, and more
 
 ### 🛠️ 50+ Built-in Skills
+
 Pre-built skills for real-world tasks:
 
-| Category | Skills |
-|----------|--------|
-| **Developer** | GitHub · Git · Docker · tmux · Shell |
-| **Productivity** | Notion · Obsidian · Canvas · 1Password |
-| **Communication** | Email · Calendar · Contacts |
-| **Media** | Image generation · PDF processing · Web scraping |
-| **And more...** | 50+ skills with an extensible plugin SDK |
+| Category          | Skills                                           |
+| ----------------- | ------------------------------------------------ |
+| **Developer**     | GitHub · Git · Docker · tmux · Shell             |
+| **Productivity**  | Notion · Obsidian · Canvas · 1Password           |
+| **Communication** | Email · Calendar · Contacts                      |
+| **Media**         | Image generation · PDF processing · Web scraping |
+| **And more...**   | 50+ skills with an extensible plugin SDK         |
 
 ### 📱 Cross-Platform Apps
+
 Native apps for every major platform:
 
 - **macOS** — Native Swift app with menu bar integration
@@ -77,6 +81,7 @@ Native apps for every major platform:
 - **CLI / TUI** — Terminal interface for power users
 
 ### 🔒 Privacy-First & Self-Hosted
+
 - **Your data stays yours** — runs on your own server or machine
 - **No cloud dependency** — works with local models via Ollama
 - **Open source** — MIT licensed, fully transparent
@@ -84,6 +89,7 @@ Native apps for every major platform:
 ## Quick Start
 
 ### Prerequisites
+
 - **Node.js** ≥ 22
 - **pnpm** (comes with the repo's `packageManager` field)
 

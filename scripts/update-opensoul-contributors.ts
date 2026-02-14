@@ -1,7 +1,12 @@
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ApiContributor, Entry, MapConfig, User } from "./update-opensoul-contributors.types.js";
+import type {
+  ApiContributor,
+  Entry,
+  MapConfig,
+  User,
+} from "./update-opensoul-contributors.types.js";
 
 const REPO = "opensoul/opensoul";
 const PER_LINE = 10;

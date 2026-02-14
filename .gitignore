@@ -74,4 +74,6 @@ USER.md
 /memory/
 .agent/*.json
 !.agent/workflows/
-local/
+/local/
+# Allow source code local/ directories
+!src/**/local/

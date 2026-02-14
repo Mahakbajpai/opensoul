@@ -16,9 +16,9 @@ Fixes #(issue number) (if applicable)
 
 ## Changes Made
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Checklist
 

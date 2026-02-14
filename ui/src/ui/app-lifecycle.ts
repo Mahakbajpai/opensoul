@@ -1,4 +1,4 @@
-import { tabFromPath, type Tab } from "./navigation.ts";
+import type { ThemeMode } from "./theme.ts";
 import { connectGateway } from "./app-gateway.ts";
 import {
   startLogsPolling,
@@ -27,7 +27,7 @@ import {
   sendShellReady,
   type DesktopInitPayload,
 } from "./desktop-bridge.ts";
-import type { ThemeMode } from "./theme.ts";
+import { tabFromPath, type Tab } from "./navigation.ts";
 
 type LifecycleHost = {
   basePath: string;
@@ -124,7 +124,7 @@ function initDesktopBridge(host: LifecycleHost) {
 
     onNavigate: (tab: string) => {
       // Validate tab name before navigation
-      const validTab = tabFromPath(`/${tab}`) as Tab | null;
+      const validTab = tabFromPath(`/${tab}`);
       if (validTab) {
         setTab(host as unknown as Parameters<typeof setTab>[0], validTab);
       }
