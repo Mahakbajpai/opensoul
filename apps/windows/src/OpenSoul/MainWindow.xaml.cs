@@ -933,11 +933,6 @@ public partial class MainWindow : Window
         };
     }
 
-    private void UpdateThemeIcon()
-    {
-        ThemeIcon.Text = _themeService.Resolved == ThemeService.ResolvedTheme.Dark ? "☀" : "🌙";
-    }
-
     // ═══════════ THEME ═══════════
 
     private void OnThemeChanged(ThemeService.ResolvedTheme theme)
@@ -985,13 +980,40 @@ public partial class MainWindow : Window
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        // Toggle between light and dark
-        var next = _themeService.Resolved == ThemeService.ResolvedTheme.Dark
-            ? ThemeService.ThemeMode.Light
-            : ThemeService.ThemeMode.Dark;
+        // Cycle through System -> Light -> Dark -> System
+        var next = _themeService.Mode switch
+        {
+            ThemeService.ThemeMode.System => ThemeService.ThemeMode.Light,
+            ThemeService.ThemeMode.Light => ThemeService.ThemeMode.Dark,
+            ThemeService.ThemeMode.Dark => ThemeService.ThemeMode.System,
+            _ => ThemeService.ThemeMode.System,
+        };
         _themeService.Mode = next;
-        _settings.Theme = next == ThemeService.ThemeMode.Dark ? "dark" : "light";
+        _settings.Theme = next switch
+        {
+            ThemeService.ThemeMode.Light => "light",
+            ThemeService.ThemeMode.Dark => "dark",
+            _ => "system",
+        };
         _ = _settingsStore.SaveAsync(_settings);
+        UpdateThemeIcon();
+    }
+
+    /// <summary>Update the theme toggle icon to reflect the current mode.</summary>
+    private void UpdateThemeIcon()
+    {
+        ThemeIcon.Text = _themeService.Mode switch
+        {
+            ThemeService.ThemeMode.Light => "\u2600",   // ☀ Sun
+            ThemeService.ThemeMode.Dark => "\u263D",     // ☽ Moon
+            _ => "\uD83D\uDDA5",                        // 🖥 Monitor (System)
+        };
+        ThemeToggleButton.ToolTip = _themeService.Mode switch
+        {
+            ThemeService.ThemeMode.Light => "Theme: Light (click to switch to Dark)",
+            ThemeService.ThemeMode.Dark => "Theme: Dark (click to switch to System)",
+            _ => "Theme: System (click to switch to Light)",
+        };
     }
 
     // ═══════════ SYSTEM TRAY ═══════════

@@ -206,6 +206,8 @@ export function renderChat(props: ChatProps) {
 
   const splitRatio = props.splitRatio ?? 0.6;
   const sidebarOpen = Boolean(props.sidebarOpen && props.onCloseSidebar);
+  const chatItems = buildChatItems(props);
+  const isEmpty = !props.loading && chatItems.length === 0;
   const thread = html`
     <div
       class="chat-thread"
@@ -216,12 +218,38 @@ export function renderChat(props: ChatProps) {
       ${
         props.loading
           ? html`
-              <div class="muted">Loading chat…</div>
+              <div class="muted" style="text-align:center;padding:48px 0;">Loading chat…</div>
+            `
+          : nothing
+      }
+      ${
+        isEmpty
+          ? html`
+              <div class="chat-welcome">
+                <div class="chat-welcome__icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+                <div class="chat-welcome__title">Start a conversation</div>
+                <div class="chat-welcome__sub">Send a message to begin chatting with the assistant.</div>
+                <div class="chat-welcome__hints">
+                  <button class="chat-welcome__hint" @click=${() => { props.onDraftChange("What can you help me with?"); }}>
+                    What can you help me with?
+                  </button>
+                  <button class="chat-welcome__hint" @click=${() => { props.onDraftChange("Show me your available tools"); }}>
+                    Show me your available tools
+                  </button>
+                  <button class="chat-welcome__hint" @click=${() => { props.onDraftChange("Tell me about this system"); }}>
+                    Tell me about this system
+                  </button>
+                </div>
+              </div>
             `
           : nothing
       }
       ${repeat(
-        buildChatItems(props),
+        chatItems,
         (item) => item.key,
         (item) => {
           if (item.kind === "divider") {
@@ -404,20 +432,23 @@ export function renderChat(props: ChatProps) {
             ></textarea>
           </label>
           <div class="chat-compose__actions">
-            <button
-              class="btn"
-              ?disabled=${!props.connected || (!canAbort && props.sending)}
-              @click=${canAbort ? props.onAbort : props.onNewSession}
-            >
-              ${canAbort ? "Stop" : "New session"}
-            </button>
-            <button
-              class="btn primary"
-              ?disabled=${!props.connected}
-              @click=${props.onSend}
-            >
-              ${isBusy ? "Queue" : "Send"}<kbd class="btn-kbd">↵</kbd>
-            </button>
+            <span class="chat-compose__hint">↵ Send · Shift+↵ New line</span>
+            <div class="chat-compose__actions-right">
+              <button
+                class="btn"
+                ?disabled=${!props.connected || (!canAbort && props.sending)}
+                @click=${canAbort ? props.onAbort : props.onNewSession}
+              >
+                ${canAbort ? "Stop" : "New"}
+              </button>
+              <button
+                class="btn primary"
+                ?disabled=${!props.connected}
+                @click=${props.onSend}
+              >
+                ${isBusy ? "Queue" : "Send"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

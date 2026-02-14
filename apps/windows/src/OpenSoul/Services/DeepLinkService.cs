@@ -172,11 +172,17 @@ public sealed class DeepLinkService : IDisposable
             {
                 break;
             }
+            catch (System.IO.IOException ex) when (ex.HResult == unchecked((int)0x800700E7))
+            {
+                // ERROR_PIPE_BUSY - another instance owns the pipe; stop retrying
+                _logger.LogInformation("Another OpenSoul instance owns the deep link pipe. Stopping listener.");
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error in deep link pipe listener");
-                // Brief backoff before retrying
-                await Task.Delay(500, ct);
+                // Longer backoff before retrying
+                await Task.Delay(3000, ct);
             }
         }
     }

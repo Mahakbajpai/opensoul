@@ -35,24 +35,24 @@
   --border-strong: #3f3f46;
   --border-hover: #52525b;
   --input: #27272a;
-  --ring: #ff5c5c;
+  --ring: #71717a;
 
-  /* Accent - Punchy signature red */
-  --accent: #ff5c5c;
-  --accent-hover: #ff7070;
-  --accent-muted: #ff5c5c;
-  --accent-subtle: rgba(255, 92, 92, 0.15);
-  --accent-foreground: #fafafa;
-  --accent-glow: rgba(255, 92, 92, 0.25);
-  --primary: #ff5c5c;
-  --primary-foreground: #ffffff;
+  /* Accent - Neutral grayscale (Cursor/Notion inspired) */
+  --accent: #e4e4e7;
+  --accent-hover: #fafafa;
+  --accent-muted: #a1a1aa;
+  --accent-subtle: rgba(255, 255, 255, 0.08);
+  --accent-foreground: #18181b;
+  --accent-glow: rgba(255, 255, 255, 0.06);
+  --primary: #e4e4e7;
+  --primary-foreground: #18181b;
 
-  /* Secondary - Teal accent for variety */
+  /* Secondary - Neutral gray accent */
   --secondary: #1e2028;
   --secondary-foreground: #f4f4f5;
-  --accent-2: #14b8a6;
-  --accent-2-muted: rgba(20, 184, 166, 0.7);
-  --accent-2-subtle: rgba(20, 184, 166, 0.15);
+  --accent-2: #a1a1aa;
+  --accent-2-muted: rgba(161, 161, 170, 0.7);
+  --accent-2-subtle: rgba(161, 161, 170, 0.15);
 
   /* Semantic - More saturated */
   --ok: #22c55e;
@@ -68,10 +68,10 @@
   --danger-subtle: rgba(239, 68, 68, 0.12);
   --info: #3b82f6;
 
-  /* Focus - With glow */
-  --focus: rgba(255, 92, 92, 0.25);
+  /* Focus - Subtle neutral glow */
+  --focus: rgba(161, 161, 170, 0.2);
   --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring);
-  --focus-glow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring), 0 0 20px var(--accent-glow);
+  --focus-glow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring), 0 0 16px var(--accent-glow);
 
   /* Grid */
   --grid-line: rgba(255, 255, 255, 0.04);
@@ -146,20 +146,20 @@
   --border-hover: #a1a1aa;
   --input: #e4e4e7;
 
-  --accent: #dc2626;
-  --accent-hover: #ef4444;
-  --accent-muted: #dc2626;
-  --accent-subtle: rgba(220, 38, 38, 0.12);
+  --accent: #18181b;
+  --accent-hover: #3f3f46;
+  --accent-muted: #52525b;
+  --accent-subtle: rgba(0, 0, 0, 0.06);
   --accent-foreground: #ffffff;
-  --accent-glow: rgba(220, 38, 38, 0.15);
-  --primary: #dc2626;
+  --accent-glow: rgba(0, 0, 0, 0.08);
+  --primary: #18181b;
   --primary-foreground: #ffffff;
 
   --secondary: #f4f4f5;
   --secondary-foreground: #3f3f46;
-  --accent-2: #0d9488;
-  --accent-2-muted: rgba(13, 148, 136, 0.75);
-  --accent-2-subtle: rgba(13, 148, 136, 0.12);
+  --accent-2: #52525b;
+  --accent-2-muted: rgba(82, 82, 91, 0.75);
+  --accent-2-subtle: rgba(82, 82, 91, 0.12);
 
   --ok: #16a34a;
   --ok-muted: rgba(22, 163, 74, 0.75);
@@ -174,8 +174,8 @@
   --danger-subtle: rgba(220, 38, 38, 0.1);
   --info: #2563eb;
 
-  --focus: rgba(220, 38, 38, 0.2);
-  --focus-glow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring), 0 0 16px var(--accent-glow);
+  --focus: rgba(161, 161, 170, 0.15);
+  --focus-glow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring), 0 0 12px var(--accent-glow);
 
   --grid-line: rgba(0, 0, 0, 0.05);
 
@@ -249,7 +249,7 @@ opensoul-app {
 }
 
 a {
-  color: var(--accent);
+  color: var(--info);
   text-decoration: none;
 }
 
@@ -354,7 +354,7 @@ select {
 @keyframes glow-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 rgba(255, 92, 92, 0);
+    box-shadow: 0 0 0 transparent;
   }
   50% {
     box-shadow: 0 0 20px var(--accent-glow);

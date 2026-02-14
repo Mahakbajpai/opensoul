@@ -4,6 +4,7 @@ import type { UsageState } from "./controllers/usage.ts";
 import { parseAgentSessionKey } from "../../../src/routing/session-key.js";
 import { refreshChatAvatar } from "./app-chat.ts";
 import { renderChatControls, renderTab, renderThemeToggle } from "./app-render.helpers.ts";
+import { isDesktopShell } from "./desktop-bridge.ts";
 import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controllers/agent-files.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
@@ -148,7 +149,7 @@ export function renderApp(state: AppViewState) {
             <span>Health</span>
             <span class="mono">${state.connected ? "OK" : "Offline"}</span>
           </div>
-          ${renderThemeToggle(state)}
+          ${isDesktopShell() ? nothing : renderThemeToggle(state)}
         </div>
       </header>
       <aside class="nav ${state.settings.navCollapsed ? "nav--collapsed" : ""}">
@@ -236,6 +237,7 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
+                onNavigate: (tab) => state.setTab(tab as import("./navigation.ts").Tab),
               })
             : nothing
         }

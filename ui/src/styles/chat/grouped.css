@@ -128,7 +128,7 @@ img.chat-avatar {
   position: relative;
   display: inline-block;
   border: 1px solid transparent;
-  background: var(--card);
+  background: transparent;
   border-radius: var(--radius-lg);
   padding: 10px 14px;
   box-shadow: none;
@@ -243,29 +243,29 @@ img.chat-avatar {
   }
 }
 
-/* Light mode: restore borders */
+/* Light mode: assistant bubbles stay borderless */
 :root[data-theme="light"] .chat-bubble {
-  border-color: var(--border);
-  box-shadow: inset 0 1px 0 var(--card-highlight);
+  border-color: transparent;
+  background: transparent;
 }
 
 .chat-bubble:hover {
   background: var(--bg-hover);
 }
 
-/* User bubbles have different styling */
+/* User bubbles - neutral gray background */
 .chat-group.user .chat-bubble {
-  background: var(--accent-subtle);
+  background: var(--bg-hover);
   border-color: transparent;
 }
 
 :root[data-theme="light"] .chat-group.user .chat-bubble {
-  border-color: rgba(234, 88, 12, 0.2);
-  background: rgba(251, 146, 60, 0.12);
+  border-color: var(--border);
+  background: var(--bg-muted);
 }
 
 .chat-group.user .chat-bubble:hover {
-  background: rgba(255, 77, 77, 0.15);
+  background: var(--bg-muted);
 }
 
 /* Streaming animation */

@@ -1,8 +1,9 @@
-import { html } from "lit";
+import { html, nothing } from "lit";
 import type { GatewayHelloOk } from "../gateway.ts";
 import type { UiSettings } from "../storage.ts";
 import { formatRelativeTimestamp, formatDurationHuman } from "../format.ts";
 import { formatNextRun } from "../presenter.ts";
+import { icons } from "../icons.ts";
 
 export type OverviewProps = {
   connected: boolean;
@@ -20,6 +21,7 @@ export type OverviewProps = {
   onSessionKeyChange: (next: string) => void;
   onConnect: () => void;
   onRefresh: () => void;
+  onNavigate?: (tab: string) => void;
 };
 
 export function renderOverview(props: OverviewProps) {
@@ -218,16 +220,23 @@ export function renderOverview(props: OverviewProps) {
       </div>
     </section>
 
-    <section class="grid grid-cols-3" style="margin-top: 18px;">
+    <section class="grid grid-cols-4" style="margin-top: 18px;">
+      <div class="card stat-card">
+        <div class="stat-label">Status</div>
+        <div class="stat-value ${props.connected ? "ok" : "warn"}">
+          ${props.connected ? "Online" : "Offline"}
+        </div>
+        <div class="muted">Gateway connection state.</div>
+      </div>
       <div class="card stat-card">
         <div class="stat-label">Instances</div>
         <div class="stat-value">${props.presenceCount}</div>
-        <div class="muted">Presence beacons in the last 5 minutes.</div>
+        <div class="muted">Active beacons in the last 5 min.</div>
       </div>
       <div class="card stat-card">
         <div class="stat-label">Sessions</div>
         <div class="stat-value">${props.sessionsCount ?? "n/a"}</div>
-        <div class="muted">Recent session keys tracked by the gateway.</div>
+        <div class="muted">Tracked session keys.</div>
       </div>
       <div class="card stat-card">
         <div class="stat-label">Cron</div>
@@ -238,23 +247,97 @@ export function renderOverview(props: OverviewProps) {
       </div>
     </section>
 
+    <section class="grid grid-cols-2" style="margin-top: 18px;">
+      <!-- System Information -->
+      <div class="card">
+        <div class="card-title">System Information</div>
+        <div class="card-sub">Runtime details from the gateway handshake.</div>
+        <div class="stat-grid" style="margin-top: 16px;">
+          <div class="stat">
+            <div class="stat-label">Protocol Version</div>
+            <div class="stat-value" style="font-size:18px;">${props.hello?.protocol ?? "n/a"}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Uptime</div>
+            <div class="stat-value" style="font-size:18px;">${uptime}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Tick Interval</div>
+            <div class="stat-value" style="font-size:18px;">${tick}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Last Channels Refresh</div>
+            <div class="stat-value" style="font-size:18px;">
+              ${props.lastChannelsRefresh ? formatRelativeTimestamp(props.lastChannelsRefresh) : "n/a"}
+            </div>
+          </div>
+          ${props.hello?.features?.methods
+            ? html`<div class="stat" style="grid-column: 1 / -1;">
+                <div class="stat-label">Available Methods</div>
+                <div class="muted" style="margin-top:4px;font-size:12px;word-break:break-word;">
+                  ${props.hello.features.methods.join(", ")}
+                </div>
+              </div>`
+            : nothing
+          }
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-title">Quick Actions</div>
+        <div class="card-sub">Navigate to common tasks quickly.</div>
+        <div class="overview-actions" style="margin-top: 16px; display: grid; gap: 10px;">
+          <button class="btn" style="justify-content: flex-start; width: 100%;"
+            @click=${() => props.onNavigate?.("chat")}>
+            ${icons.messageSquare}
+            <span>Open Chat</span>
+          </button>
+          <button class="btn" style="justify-content: flex-start; width: 100%;"
+            @click=${() => props.onNavigate?.("channels")}>
+            ${icons.link}
+            <span>View Channels</span>
+          </button>
+          <button class="btn" style="justify-content: flex-start; width: 100%;"
+            @click=${() => props.onNavigate?.("sessions")}>
+            ${icons.fileText}
+            <span>Manage Sessions</span>
+          </button>
+          <button class="btn" style="justify-content: flex-start; width: 100%;"
+            @click=${() => props.onNavigate?.("logs")}>
+            ${icons.scrollText}
+            <span>View Logs</span>
+          </button>
+          <button class="btn" style="justify-content: flex-start; width: 100%;"
+            @click=${() => props.onNavigate?.("config")}>
+            ${icons.settings}
+            <span>Edit Config</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <section class="card" style="margin-top: 18px;">
-      <div class="card-title">Notes</div>
-      <div class="card-sub">Quick reminders for remote control setups.</div>
+      <div class="card-title">Getting Started</div>
+      <div class="card-sub">Quick guides to help you get the most out of OpenSoul.</div>
       <div class="note-grid" style="margin-top: 14px;">
         <div>
-          <div class="note-title">Tailscale serve</div>
+          <div class="note-title">1. Connect your gateway</div>
           <div class="muted">
-            Prefer serve mode to keep the gateway on loopback with tailnet auth.
+            Enter the WebSocket URL and token above, then click Connect. For remote access, use Tailscale serve.
           </div>
         </div>
         <div>
-          <div class="note-title">Session hygiene</div>
-          <div class="muted">Use /new or sessions.patch to reset context.</div>
+          <div class="note-title">2. Link messaging channels</div>
+          <div class="muted">
+            Go to Channels to connect WhatsApp, Telegram, Discord, Signal, or iMessage.
+          </div>
         </div>
         <div>
-          <div class="note-title">Cron reminders</div>
-          <div class="muted">Use isolated sessions for recurring runs.</div>
+          <div class="note-title">3. Chat and automate</div>
+          <div class="muted">
+            Use the Chat view for real-time interaction, or set up Cron for scheduled automated runs.
+          </div>
         </div>
       </div>
     </section>
