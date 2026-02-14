@@ -2,8 +2,8 @@ import { html, nothing } from "lit";
 import type { GatewayHelloOk } from "../gateway.ts";
 import type { UiSettings } from "../storage.ts";
 import { formatRelativeTimestamp, formatDurationHuman } from "../format.ts";
-import { formatNextRun } from "../presenter.ts";
 import { icons } from "../icons.ts";
+import { formatNextRun } from "../presenter.ts";
 
 export type OverviewProps = {
   connected: boolean;
@@ -271,14 +271,15 @@ export function renderOverview(props: OverviewProps) {
               ${props.lastChannelsRefresh ? formatRelativeTimestamp(props.lastChannelsRefresh) : "n/a"}
             </div>
           </div>
-          ${props.hello?.features?.methods
-            ? html`<div class="stat" style="grid-column: 1 / -1;">
+          ${
+            props.hello?.features?.methods
+              ? html`<div class="stat" style="grid-column: 1 / -1;">
                 <div class="stat-label">Available Methods</div>
                 <div class="muted" style="margin-top:4px;font-size:12px;word-break:break-word;">
                   ${props.hello.features.methods.join(", ")}
                 </div>
               </div>`
-            : nothing
+              : nothing
           }
         </div>
       </div>

@@ -1,5 +1,5 @@
 {
-  "name": "@njx-njx/opensoul",
+  "name": "opensoul",
   "version": "0.1.1",
   "description": "Your AI Soul Companion — Chat, Collaborate, Create. Self-hosted AI agent across 30+ messaging channels.",
   "keywords": [
@@ -27,9 +27,6 @@
     "type": "git",
     "url": "https://github.com/NJX-njx/opensoul.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "bin": {
     "opensoul": "opensoul.mjs"
   },
@@ -51,6 +48,9 @@
     ".": "./dist/index.js",
     "./plugin-sdk": "./dist/plugin-sdk/index.js",
     "./cli-entry": "./opensoul.mjs"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "android:assemble": "cd apps/android && ./gradlew :app:assembleDebug",
@@ -165,7 +165,7 @@
     "jszip": "^3.10.1",
     "linkedom": "^0.18.12",
     "long": "^5.3.2",
-    "markdown-it": "^14.1.0",
+    "markdown-it": "^14.1.1",
     "node-edge-tts": "^1.2.10",
     "osc-progress": "^0.3.0",
     "pdfjs-dist": "^5.4.624",
@@ -220,7 +220,8 @@
       "form-data": "2.5.4",
       "@hono/node-server>hono": "4.11.8",
       "hono": "4.11.8",
-      "qs": "6.14.1",
+      "axios": ">=1.13.5",
+      "qs": "6.14.2",
       "@sinclair/typebox": "0.34.48",
       "tar": "7.5.7",
       "tough-cookie": "4.1.3"

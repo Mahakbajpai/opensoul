@@ -218,7 +218,7 @@ export function renderChat(props: ChatProps) {
       ${
         props.loading
           ? html`
-              <div class="muted" style="text-align:center;padding:48px 0;">Loading chat…</div>
+              <div class="muted" style="text-align: center; padding: 48px 0">Loading chat…</div>
             `
           : nothing
       }
@@ -234,13 +234,19 @@ export function renderChat(props: ChatProps) {
                 <div class="chat-welcome__title">Start a conversation</div>
                 <div class="chat-welcome__sub">Send a message to begin chatting with the assistant.</div>
                 <div class="chat-welcome__hints">
-                  <button class="chat-welcome__hint" @click=${() => { props.onDraftChange("What can you help me with?"); }}>
+                  <button class="chat-welcome__hint" @click=${() => {
+                    props.onDraftChange("What can you help me with?");
+                  }}>
                     What can you help me with?
                   </button>
-                  <button class="chat-welcome__hint" @click=${() => { props.onDraftChange("Show me your available tools"); }}>
+                  <button class="chat-welcome__hint" @click=${() => {
+                    props.onDraftChange("Show me your available tools");
+                  }}>
                     Show me your available tools
                   </button>
-                  <button class="chat-welcome__hint" @click=${() => { props.onDraftChange("Tell me about this system"); }}>
+                  <button class="chat-welcome__hint" @click=${() => {
+                    props.onDraftChange("Tell me about this system");
+                  }}>
                     Tell me about this system
                   </button>
                 </div>

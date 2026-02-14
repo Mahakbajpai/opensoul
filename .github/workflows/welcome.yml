@@ -1,0 +1,36 @@
+name: Welcome
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            👋 Welcome to OpenSoul! Thanks for opening your first issue.
+
+            A maintainer will review it soon. In the meantime:
+            - Make sure you've read our [Contributing Guide](https://github.com/NJX-njx/opensoul/blob/main/CONTRIBUTING.md)
+            - Check if there's a related [Discussion](https://github.com/NJX-njx/opensoul/discussions) thread
+
+            We appreciate your help making OpenSoul better! 🙏
+          pr-message: |
+            👋 Welcome to OpenSoul! Thanks for your first pull request.
+
+            A maintainer will review your changes soon. Please make sure:
+            - [ ] You've run `pnpm check` locally and it passes
+            - [ ] Your changes follow our [Contributing Guide](https://github.com/NJX-njx/opensoul/blob/main/CONTRIBUTING.md)
+            - [ ] You've filled out the PR template
+
+            Thank you for contributing! 🎉
