@@ -28,8 +28,10 @@ import {
   normalizeBasePath,
   normalizePath,
   pathForTab,
+  SETTINGS_TABS,
   tabFromPath,
   titleForTab,
+  type SettingsTab,
   type Tab,
 } from "./navigation.ts";
 import { saveSettings, type UiSettings } from "./storage.ts";
@@ -56,6 +58,9 @@ type SettingsHost = {
   themeMedia: MediaQueryList | null;
   themeMediaHandler: ((event: MediaQueryListEvent) => void) | null;
   pendingGatewayUrl?: string | null;
+  settingsOpen: boolean;
+  settingsSection: SettingsTab | "general";
+  openSettings: (section?: SettingsTab | "general") => void;
 };
 
 export function applySettings(host: SettingsHost, next: UiSettings) {
@@ -149,6 +154,14 @@ export function applySettingsFromUrl(host: SettingsHost) {
 }
 
 export function setTab(host: SettingsHost, next: Tab) {
+  // Config / Logs / Debug now live inside the Settings panel
+  if ((SETTINGS_TABS as readonly string[]).includes(next)) {
+    host.openSettings(next as SettingsTab);
+    // Still trigger data loading for the settings tab
+    void refreshActiveTab({ ...host, tab: next } as unknown as SettingsHost);
+    return;
+  }
+
   if (host.tab !== next) {
     host.tab = next;
   }
@@ -352,6 +365,15 @@ export function onPopState(host: SettingsHost) {
 }
 
 export function setTabFromRoute(host: SettingsHost, next: Tab) {
+  // Config / Logs / Debug now live inside the Settings panel
+  if ((SETTINGS_TABS as readonly string[]).includes(next)) {
+    host.openSettings(next as SettingsTab);
+    if (host.connected) {
+      void refreshActiveTab({ ...host, tab: next } as unknown as SettingsHost);
+    }
+    return;
+  }
+
   if (host.tab !== next) {
     host.tab = next;
   }

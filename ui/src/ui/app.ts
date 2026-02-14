@@ -567,6 +567,20 @@ export class OpenSoulApp extends LitElement {
 
   setSettingsSection(section: import("./navigation.ts").SettingsTab | "general") {
     this.settingsSection = section;
+    // Trigger data loading when switching between settings sections
+    if (section === "config") {
+      void loadConfigSchemaInternal(
+        this as unknown as Parameters<typeof loadConfigSchemaInternal>[0],
+      );
+      void loadConfigInternal(this as unknown as Parameters<typeof loadConfigInternal>[0]);
+    } else if (section === "logs") {
+      this.logsAtBottom = true;
+      void loadLogsInternal(this as unknown as Parameters<typeof loadLogsInternal>[0], {
+        reset: true,
+      });
+    } else if (section === "debug") {
+      void loadDebugInternal(this as unknown as Parameters<typeof loadDebugInternal>[0]);
+    }
   }
 
   // Sidebar handlers for tool output viewing

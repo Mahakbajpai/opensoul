@@ -5,7 +5,7 @@ import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals.ts";
 import type { SkillMessage } from "./controllers/skills.ts";
 import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway.ts";
-import type { Tab } from "./navigation.ts";
+import type { SettingsTab, Tab } from "./navigation.ts";
 import type { UiSettings } from "./storage.ts";
 import type { ThemeTransitionContext } from "./theme-transition.ts";
 import type { ThemeMode } from "./theme.ts";
@@ -219,6 +219,8 @@ export type AppViewState = {
   logsLimit: number;
   logsMaxBytes: number;
   logsAtBottom: boolean;
+  settingsOpen: boolean;
+  settingsSection: SettingsTab | "general";
   client: GatewayBrowserClient | null;
   refreshSessionsAfterChat: Set<string>;
   connect: () => void;
@@ -279,6 +281,9 @@ export type AppViewState = {
   resetChatScroll: () => void;
   exportLogs: (lines: string[], label: string) => void;
   handleLogsScroll: (event: Event) => void;
+  openSettings: (section?: SettingsTab | "general") => void;
+  closeSettings: () => void;
+  setSettingsSection: (section: SettingsTab | "general") => void;
   handleOpenSidebar: (content: string) => void;
   handleCloseSidebar: () => void;
   handleSplitRatioChange: (ratio: number) => void;

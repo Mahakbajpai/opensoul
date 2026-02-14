@@ -91,12 +91,6 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
-        <!-- Theme toggle button -->
-        <Style x:Key="ThemeToggle" TargetType="Button" BasedOn="{StaticResource TitleBarButton}">
-            <Setter Property="Width" Value="36" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="ToolTip" Value="Toggle theme" />
-        </Style>
     </Window.Resources>
 
     <Grid>
@@ -192,8 +186,6 @@
                 <ColumnDefinition Width="Auto" />
                 <!-- Spacer (draggable) -->
                 <ColumnDefinition Width="*" />
-                <!-- Theme toggle -->
-                <ColumnDefinition Width="Auto" />
                 <!-- Window controls -->
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -232,20 +224,8 @@
                 </StackPanel>
             </Border>
 
-            <!-- Theme toggle -->
-            <Button Grid.Column="4"
-                    Style="{StaticResource ThemeToggle}"
-                    x:Name="ThemeToggleButton"
-                    Click="ThemeToggleButton_Click">
-                <TextBlock x:Name="ThemeIcon"
-                           Text="☀"
-                           FontSize="14"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
-            </Button>
-
             <!-- Window controls: minimize, maximize, close -->
-            <StackPanel Grid.Column="5" Orientation="Horizontal">
+            <StackPanel Grid.Column="4" Orientation="Horizontal">
                 <Button Style="{StaticResource TitleBarButton}"
                         Click="MinimizeButton_Click"
                         ToolTip="Minimize">
@@ -269,7 +249,7 @@
             </StackPanel>
 
             <!-- Bottom border line -->
-            <Border Grid.Column="0" Grid.ColumnSpan="6"
+            <Border Grid.Column="0" Grid.ColumnSpan="5"
                     Height="1"
                     VerticalAlignment="Bottom"
                     Background="{DynamicResource BorderBrush}" />

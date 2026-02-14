@@ -196,6 +196,8 @@
 
 .nav {
   grid-area: nav;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 16px 12px;
@@ -345,6 +347,71 @@
 
 .nav-group--collapsed .nav-label__chevron {
   transform: rotate(-90deg);
+}
+
+/* Nav bottom (settings button) */
+.nav-bottom {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.nav-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.nav-settings-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+:root[data-theme="light"] .nav-settings-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.nav-settings-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  opacity: 0.65;
+}
+
+.nav-settings-btn__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.nav-settings-btn__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed nav: hide settings text */
+.nav--collapsed .nav-settings-btn__text {
+  display: none;
+}
+
+.nav--collapsed .nav-settings-btn {
+  justify-content: center;
+  padding: 9px;
 }
 
 /* Nav items */

@@ -999,21 +999,11 @@ public partial class MainWindow : Window
         UpdateThemeIcon();
     }
 
-    /// <summary>Update the theme toggle icon to reflect the current mode.</summary>
+    /// <summary>No-op: theme toggle icon was removed from the titlebar (now in web UI Settings panel).</summary>
     private void UpdateThemeIcon()
     {
-        ThemeIcon.Text = _themeService.Mode switch
-        {
-            ThemeService.ThemeMode.Light => "\u2600",   // ☀ Sun
-            ThemeService.ThemeMode.Dark => "\u263D",     // ☽ Moon
-            _ => "\uD83D\uDDA5",                        // 🖥 Monitor (System)
-        };
-        ThemeToggleButton.ToolTip = _themeService.Mode switch
-        {
-            ThemeService.ThemeMode.Light => "Theme: Light (click to switch to Dark)",
-            ThemeService.ThemeMode.Dark => "Theme: Dark (click to switch to System)",
-            _ => "Theme: System (click to switch to Light)",
-        };
+        // Intentionally empty — titlebar theme button was removed.
+        // Theme is now managed via the web UI Settings panel.
     }
 
     // ═══════════ SYSTEM TRAY ═══════════

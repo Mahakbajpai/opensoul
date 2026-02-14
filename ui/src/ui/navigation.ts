@@ -7,8 +7,12 @@ export const TAB_GROUPS = [
     tabs: ["channels", "instances", "sessions", "usage", "cron"],
   },
   { label: "Build", tabs: ["agents", "skills", "nodes"] },
-  { label: "System", tabs: ["overview", "config", "logs", "debug"] },
+  { label: "System", tabs: ["overview"] },
 ] as const;
+
+/** Tabs that live inside the Settings panel instead of the main sidebar. */
+export const SETTINGS_TABS = ["config", "logs", "debug"] as const;
+export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 export type Tab =
   | "agents"
