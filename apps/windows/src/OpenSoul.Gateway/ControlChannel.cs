@@ -57,19 +57,22 @@ public sealed class ControlChannel : IAsyncDisposable
 
         if (mode == ConnectionMode.Local)
         {
-            // Start local gateway
+            // Start local gateway.
             await _processManager.StartAsync(ct);
 
-            if (_processManager.WebSocketUrl is null)
+            if (_processManager.Status != GatewayStatus.Running ||
+                _processManager.WebSocketUrl is null ||
+                string.IsNullOrWhiteSpace(_processManager.GatewayToken))
             {
-                _logger.LogError("Gateway started but no WebSocket URL available");
+                _logger.LogError("Local gateway failed to start (status {Status})", _processManager.Status);
                 SetState(ControlChannelState.Disconnected);
-                return;
+                throw new InvalidOperationException("Local gateway failed to start.");
             }
 
             _connection.Configure(() => new GatewayConnectionConfig
             {
                 Url = _processManager.WebSocketUrl,
+                Token = _processManager.GatewayToken,
             });
         }
         else if (mode == ConnectionMode.Remote)
@@ -95,6 +98,14 @@ public sealed class ControlChannel : IAsyncDisposable
         _subscription = _connection.Subscribe(HandlePushAsync);
 
         await _connection.StartAsync(ct);
+
+        var connected = await WaitForConnectedAsync(TimeSpan.FromSeconds(12), ct);
+        if (!connected)
+        {
+            await _connection.StopAsync();
+            SetState(ControlChannelState.Disconnected);
+            throw new TimeoutException("Gateway connection timed out.");
+        }
     }
 
     /// <summary>
@@ -216,6 +227,28 @@ public sealed class ControlChannel : IAsyncDisposable
         }
 
         return Task.CompletedTask;
+    }
+
+    private async Task<bool> WaitForConnectedAsync(TimeSpan timeout, CancellationToken ct)
+    {
+        var startedAt = DateTime.UtcNow;
+        while (DateTime.UtcNow - startedAt < timeout)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            if (_connection.State == GatewayChannelState.Connected)
+                return true;
+
+            if (_connection.State == GatewayChannelState.Disconnected &&
+                _processManager.Status == GatewayStatus.Failed)
+            {
+                return false;
+            }
+
+            await Task.Delay(150, ct);
+        }
+
+        return _connection.State == GatewayChannelState.Connected;
     }
 
     private void OnConnectionStateChanged(GatewayChannelState channelState)

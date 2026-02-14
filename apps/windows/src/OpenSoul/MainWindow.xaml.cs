@@ -660,6 +660,12 @@ public partial class MainWindow : Window
 
     private void UpdateRemoteInputsEnabled()
     {
+        // Mode selection can fire during XAML initialization before fields are ready.
+        if (!IsLoaded)
+        {
+            return;
+        }
+
         var isDisconnected = _controlChannel.State == ControlChannelState.Disconnected;
         var remoteEnabled = SelectedMode == ConnectionMode.Remote && isDisconnected;
         RemoteUrlTextBox.IsEnabled = remoteEnabled;

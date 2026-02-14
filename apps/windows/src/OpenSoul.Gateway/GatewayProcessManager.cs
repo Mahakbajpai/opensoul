@@ -1,23 +1,27 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net.Http;
+using System.Net;
+using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace OpenSoul.Gateway;
 
 /// <summary>
 /// Manages the local Node.js gateway process lifecycle on Windows.
-/// Mirrors GatewayProcessManager.swift — start/stop/health-check the gateway.
-/// Uses a child process (not launchd/Task Scheduler) for simplicity.
 /// </summary>
 public sealed class GatewayProcessManager : IAsyncDisposable
 {
     private readonly ILogger<GatewayProcessManager> _logger;
     private readonly NodeLocator _nodeLocator;
-    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(5) };
 
     private Process? _gatewayProcess;
     private CancellationTokenSource? _monitorCts;
+    private string? _gatewayToken;
     private bool _disposed;
+
+    private static readonly Regex LockOwnerPidRegex =
+        new(@"gateway already running \(pid (?<pid>\d+)\)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public GatewayProcessManager(ILogger<GatewayProcessManager> logger, NodeLocator nodeLocator)
     {
@@ -38,9 +42,11 @@ public sealed class GatewayProcessManager : IAsyncDisposable
     /// <summary>The HTTP URL for the gateway.</summary>
     public string? HttpUrl => Port is not null ? $"http://127.0.0.1:{Port}" : null;
 
+    /// <summary>Token used by the managed local gateway instance.</summary>
+    public string? GatewayToken => _gatewayToken;
+
     /// <summary>
-    /// Start the gateway process. First tries to attach to an existing instance,
-    /// then starts a new one if needed.
+    /// Start the gateway process.
     /// </summary>
     public async Task StartAsync(CancellationToken ct = default)
     {
@@ -50,91 +56,56 @@ public sealed class GatewayProcessManager : IAsyncDisposable
         OpenSoulPaths.EnsureDirectories();
         SetStatus(GatewayStatus.Starting);
 
-        // First, try to attach to an existing gateway
-        if (await TryAttachExistingAsync(ct))
-        {
-            SetStatus(GatewayStatus.Running);
-            return;
-        }
-
-        // Find Node.js
         var nodePath = await _nodeLocator.FindNodeAsync();
         if (nodePath is null)
         {
             _logger.LogError("Cannot start gateway: Node.js not found");
+            await CleanupFailedStartAsync();
             SetStatus(GatewayStatus.Failed);
             return;
         }
 
-        // Find opensoul entry point
         var opensoulPath = FindOpenSoulEntry();
         if (opensoulPath is null)
         {
             _logger.LogError("Cannot start gateway: opensoul.mjs not found");
+            await CleanupFailedStartAsync();
             SetStatus(GatewayStatus.Failed);
             return;
         }
 
-        try
+        // Reuse an existing managed gateway after app restart/crash.
+        if (await TryAttachExistingGatewayAsync(ct))
         {
-            _logger.LogInformation("Starting gateway: {Node} {Script}", nodePath, opensoulPath);
-
-            var psi = new ProcessStartInfo(nodePath)
-            {
-                Arguments = $"\"{opensoulPath}\" gateway",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                WorkingDirectory = OpenSoulPaths.StateDir,
-            };
-
-            // Inherit relevant environment
-            psi.Environment["OPENSOUL_STATE_DIR"] = OpenSoulPaths.StateDir;
-
-            _gatewayProcess = Process.Start(psi);
-            if (_gatewayProcess is null)
-            {
-                SetStatus(GatewayStatus.Failed);
-                return;
-            }
-
-            _gatewayProcess.EnableRaisingEvents = true;
-            _gatewayProcess.Exited += OnGatewayExited;
-
-            // Capture output for logging
-            _gatewayProcess.OutputDataReceived += (_, e) =>
-            {
-                if (e.Data is not null) _logger.LogDebug("[gateway] {Line}", e.Data);
-            };
-            _gatewayProcess.ErrorDataReceived += (_, e) =>
-            {
-                if (e.Data is not null) _logger.LogWarning("[gateway:err] {Line}", e.Data);
-            };
-            _gatewayProcess.BeginOutputReadLine();
-            _gatewayProcess.BeginErrorReadLine();
-
-            // Write PID file
-            await File.WriteAllTextAsync(OpenSoulPaths.GatewayPidFile, _gatewayProcess.Id.ToString(), ct);
-
-            // Wait for the gateway to be ready (poll health endpoint)
-            var ready = await WaitForHealthyAsync(ct);
-            if (ready)
-            {
-                SetStatus(GatewayStatus.Running);
-                StartMonitor();
-            }
-            else
-            {
-                _logger.LogError("Gateway did not become healthy in time");
-                SetStatus(GatewayStatus.Failed);
-            }
+            SetStatus(GatewayStatus.Running);
+            StartMonitor();
+            return;
         }
-        catch (Exception ex)
+
+        var token = LoadOrCreateGatewayToken();
+        var startupErrors = new ConcurrentQueue<string>();
+
+        var started = await StartNewGatewayProcessAsync(nodePath, opensoulPath, token, startupErrors, ct);
+
+        if (!started && TryExtractLockOwnerPid(startupErrors, out var lockOwnerPid))
         {
-            _logger.LogError(ex, "Failed to start gateway");
+            _logger.LogWarning("Gateway lock owned by PID {Pid}; terminating stale process and retrying", lockOwnerPid);
+            TryKillProcessTree(lockOwnerPid);
+
+            startupErrors = new ConcurrentQueue<string>();
+            started = await StartNewGatewayProcessAsync(nodePath, opensoulPath, token, startupErrors, ct);
+        }
+
+        if (!started)
+        {
+            _logger.LogError("Gateway did not become healthy in time");
+            await CleanupFailedStartAsync();
             SetStatus(GatewayStatus.Failed);
+            return;
         }
+
+        SetStatus(GatewayStatus.Running);
+        StartMonitor();
     }
 
     /// <summary>
@@ -144,47 +115,45 @@ public sealed class GatewayProcessManager : IAsyncDisposable
     {
         _monitorCts?.Cancel();
 
-        if (_gatewayProcess is { HasExited: false })
+        var process = _gatewayProcess;
+        if (process is not null)
         {
-            _logger.LogInformation("Stopping gateway (PID {Pid})", _gatewayProcess.Id);
-            try
+            process.Exited -= OnGatewayExited;
+
+            if (!process.HasExited)
             {
-                // Try graceful shutdown via /health endpoint (or just kill)
-                _gatewayProcess.Kill(entireProcessTree: true);
-                await _gatewayProcess.WaitForExitAsync();
+                _logger.LogInformation("Stopping gateway (PID {Pid})", process.Id);
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                    await process.WaitForExitAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error stopping gateway process");
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error stopping gateway process");
-            }
+
+            process.Dispose();
         }
 
-        _gatewayProcess?.Dispose();
         _gatewayProcess = null;
 
-        // Clean up PID file
-        try { File.Delete(OpenSoulPaths.GatewayPidFile); } catch { }
+        DeleteRuntimeMetadataFiles(keepToken: true);
 
         Port = null;
+        _gatewayToken = null;
         SetStatus(GatewayStatus.Stopped);
     }
 
     /// <summary>
-    /// Check if the gateway is healthy.
+    /// Check whether the gateway listener is reachable.
     /// </summary>
     public async Task<bool> IsHealthyAsync(CancellationToken ct = default)
     {
-        if (HttpUrl is null) return false;
-
-        try
-        {
-            var response = await _http.GetAsync($"{HttpUrl}/health", ct);
-            return response.IsSuccessStatusCode;
-        }
-        catch
-        {
-            return false;
-        }
+        if (Port is null) return false;
+        if (_gatewayProcess is { HasExited: true }) return false;
+        return await IsPortAcceptingConnectionsAsync(Port.Value, ct);
     }
 
     public async ValueTask DisposeAsync()
@@ -193,38 +162,43 @@ public sealed class GatewayProcessManager : IAsyncDisposable
         _disposed = true;
 
         await StopAsync();
-        _http.Dispose();
         _monitorCts?.Dispose();
     }
 
-    // ── Private ──────────────────────────────────────────────────────
-
-    private async Task<bool> TryAttachExistingAsync(CancellationToken ct)
+    private static int FindAvailablePort()
     {
-        // Check port file
-        var port = ReadPortFile();
-        if (port is null) return false;
-
-        Port = port;
-
-        if (await IsHealthyAsync(ct))
-        {
-            _logger.LogInformation("Attached to existing gateway on port {Port}", port);
-            return true;
-        }
-
-        Port = null;
-        return false;
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        return ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 
-    private static int? ReadPortFile()
+    private static bool TryReadIntFile(string path, out int value)
+    {
+        value = default;
+
+        try
+        {
+            if (!File.Exists(path))
+                return false;
+
+            var content = File.ReadAllText(path).Trim();
+            return int.TryParse(content, out value);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string? ReadTokenFile()
     {
         try
         {
-            var portFile = OpenSoulPaths.GatewayPortFile;
-            if (!File.Exists(portFile)) return null;
-            var content = File.ReadAllText(portFile).Trim();
-            return int.TryParse(content, out var port) ? port : null;
+            if (!File.Exists(OpenSoulPaths.GatewayTokenFile))
+                return null;
+
+            var token = File.ReadAllText(OpenSoulPaths.GatewayTokenFile).Trim();
+            return string.IsNullOrWhiteSpace(token) ? null : token;
         }
         catch
         {
@@ -232,9 +206,223 @@ public sealed class GatewayProcessManager : IAsyncDisposable
         }
     }
 
-    private async Task<bool> WaitForHealthyAsync(CancellationToken ct)
+    private static string LoadOrCreateGatewayToken()
     {
-        // Poll for up to 10 seconds (gateway startup can be slow on first run)
+        var existing = ReadTokenFile();
+        if (!string.IsNullOrWhiteSpace(existing))
+            return existing;
+
+        var token = Guid.NewGuid().ToString("N");
+
+        try
+        {
+            File.WriteAllText(OpenSoulPaths.GatewayTokenFile, token);
+        }
+        catch
+        {
+            // Best effort: continue with in-memory token.
+        }
+
+        return token;
+    }
+
+    private static async Task PersistRuntimeMetadataAsync(int pid, int port, string token, CancellationToken ct)
+    {
+        await File.WriteAllTextAsync(OpenSoulPaths.GatewayPidFile, pid.ToString(), ct);
+        await File.WriteAllTextAsync(OpenSoulPaths.GatewayPortFile, port.ToString(), ct);
+        await File.WriteAllTextAsync(OpenSoulPaths.GatewayTokenFile, token, ct);
+    }
+
+    private static void DeleteRuntimeMetadataFiles(bool keepToken)
+    {
+        try { File.Delete(OpenSoulPaths.GatewayPidFile); } catch { }
+        try { File.Delete(OpenSoulPaths.GatewayPortFile); } catch { }
+
+        if (!keepToken)
+        {
+            try { File.Delete(OpenSoulPaths.GatewayTokenFile); } catch { }
+        }
+    }
+
+    private static async Task<bool> IsPortAcceptingConnectionsAsync(int port, CancellationToken ct)
+    {
+        using var tcp = new TcpClient();
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(1.5));
+
+        try
+        {
+            await tcp.ConnectAsync(IPAddress.Loopback, port, timeoutCts.Token);
+            return tcp.Connected;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> TryAttachExistingGatewayAsync(CancellationToken ct)
+    {
+        if (!TryReadIntFile(OpenSoulPaths.GatewayPidFile, out var pid))
+            return false;
+
+        if (!TryReadIntFile(OpenSoulPaths.GatewayPortFile, out var port))
+            return false;
+
+        var token = ReadTokenFile();
+        if (string.IsNullOrWhiteSpace(token))
+            return false;
+
+        Process? process;
+        try
+        {
+            process = Process.GetProcessById(pid);
+        }
+        catch
+        {
+            return false;
+        }
+
+        if (process.HasExited)
+            return false;
+
+        if (!await IsPortAcceptingConnectionsAsync(port, ct))
+            return false;
+
+        _gatewayProcess?.Dispose();
+        _gatewayProcess = process;
+        _gatewayProcess.EnableRaisingEvents = true;
+        _gatewayProcess.Exited += OnGatewayExited;
+
+        Port = port;
+        _gatewayToken = token;
+
+        _logger.LogInformation("Reusing existing managed gateway (PID {Pid}, port {Port})", pid, port);
+        return true;
+    }
+
+    private async Task<bool> StartNewGatewayProcessAsync(
+        string nodePath,
+        string opensoulPath,
+        string token,
+        ConcurrentQueue<string> startupErrors,
+        CancellationToken ct)
+    {
+        await CleanupFailedStartAsync();
+
+        var localPort = FindAvailablePort();
+        _logger.LogInformation("Starting gateway: {Node} {Script} (port {Port})", nodePath, opensoulPath, localPort);
+
+        var psi = new ProcessStartInfo(nodePath)
+        {
+            Arguments = $"\"{opensoulPath}\" gateway --allow-unconfigured --token \"{token}\" --port {localPort}",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = OpenSoulPaths.StateDir,
+        };
+
+        psi.Environment["OPENSOUL_STATE_DIR"] = OpenSoulPaths.StateDir;
+        psi.Environment["OPENSOUL_GATEWAY_TOKEN"] = token;
+
+        _gatewayProcess = Process.Start(psi);
+        if (_gatewayProcess is null)
+            return false;
+
+        _gatewayProcess.EnableRaisingEvents = true;
+        _gatewayProcess.Exited += OnGatewayExited;
+
+        _gatewayProcess.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+            {
+                _logger.LogDebug("[gateway] {Line}", e.Data);
+            }
+        };
+
+        _gatewayProcess.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+            {
+                startupErrors.Enqueue(e.Data);
+                _logger.LogWarning("[gateway:err] {Line}", e.Data);
+            }
+        };
+
+        _gatewayProcess.BeginOutputReadLine();
+        _gatewayProcess.BeginErrorReadLine();
+
+        var ready = await WaitForHealthyAsync(localPort, ct);
+        if (!ready)
+            return false;
+
+        Port = localPort;
+        _gatewayToken = token;
+
+        await PersistRuntimeMetadataAsync(_gatewayProcess.Id, localPort, token, ct);
+        return true;
+    }
+
+    private static bool TryExtractLockOwnerPid(IEnumerable<string> lines, out int pid)
+    {
+        foreach (var line in lines)
+        {
+            var match = LockOwnerPidRegex.Match(line);
+            if (!match.Success)
+                continue;
+
+            if (int.TryParse(match.Groups["pid"].Value, out pid))
+                return true;
+        }
+
+        pid = default;
+        return false;
+    }
+
+    private void TryKillProcessTree(int pid)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            if (process.HasExited)
+                return;
+
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit(5000);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to terminate stale gateway lock owner process {Pid}", pid);
+        }
+    }
+
+    private async Task CleanupFailedStartAsync()
+    {
+        if (_gatewayProcess is { HasExited: false })
+        {
+            try
+            {
+                _gatewayProcess.Kill(entireProcessTree: true);
+                await _gatewayProcess.WaitForExitAsync();
+            }
+            catch
+            {
+                // Best effort cleanup.
+            }
+        }
+
+        _gatewayProcess?.Dispose();
+        _gatewayProcess = null;
+
+        DeleteRuntimeMetadataFiles(keepToken: true);
+
+        Port = null;
+        _gatewayToken = null;
+    }
+
+    private async Task<bool> WaitForHealthyAsync(int port, CancellationToken ct)
+    {
         const int maxWaitMs = 10_000;
         const int pollIntervalMs = 250;
         var elapsed = 0;
@@ -243,17 +431,11 @@ public sealed class GatewayProcessManager : IAsyncDisposable
         {
             ct.ThrowIfCancellationRequested();
 
-            // Check if process exited
-            if (_gatewayProcess?.HasExited == true) return false;
+            if (_gatewayProcess?.HasExited == true)
+                return false;
 
-            // Read port from file
-            var port = ReadPortFile();
-            if (port is not null)
-            {
-                Port = port;
-                if (await IsHealthyAsync(ct))
-                    return true;
-            }
+            if (await IsPortAcceptingConnectionsAsync(port, ct))
+                return true;
 
             await Task.Delay(pollIntervalMs, ct);
             elapsed += pollIntervalMs;
@@ -287,10 +469,12 @@ public sealed class GatewayProcessManager : IAsyncDisposable
                 if (!await IsHealthyAsync(ct))
                 {
                     _logger.LogWarning("Gateway health check failed");
-                    // Don't immediately fail — could be temporary
                 }
             }
-            catch (OperationCanceledException) { return; }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Monitor loop error");
@@ -300,17 +484,32 @@ public sealed class GatewayProcessManager : IAsyncDisposable
 
     private static string? FindOpenSoulEntry()
     {
-        // Look for opensoul.mjs relative to the app's installation
+        var envOverride = Environment.GetEnvironmentVariable("OPENSOUL_ENTRY");
+        if (!string.IsNullOrWhiteSpace(envOverride))
+        {
+            var overridePath = envOverride.Trim();
+            if (Directory.Exists(overridePath))
+            {
+                overridePath = Path.Combine(overridePath, "opensoul.mjs");
+            }
+
+            if (File.Exists(overridePath))
+            {
+                return overridePath;
+            }
+        }
+
         var candidates = new string?[]
         {
-            // Installed: next to the executable
             Path.Combine(AppContext.BaseDirectory, "opensoul.mjs"),
-            // Development: solution/project output folder -> repository root
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "..", "opensoul.mjs")),
-            // Development fallback when output path depth differs
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "opensoul.mjs")),
-            // Global npm install
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "npm", "node_modules", "opensoul", "opensoul.mjs"),
             FindGlobalNpmPackage(),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "..", "opensoul.mjs")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "..", "..", "opensoul.mjs")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "opensoul.mjs")),
+            FindOpenSoulEntryByWalkingParents(),
         };
 
         foreach (var candidate in candidates.Where(static candidate => !string.IsNullOrWhiteSpace(candidate)).Distinct())
@@ -322,40 +521,86 @@ public sealed class GatewayProcessManager : IAsyncDisposable
         return null;
     }
 
-    private static string? FindGlobalNpmPackage()
+    private static string? FindOpenSoulEntryByWalkingParents()
     {
         try
         {
-            var psi = new ProcessStartInfo("npm", "root -g")
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            for (var depth = 0; dir is not null && depth < 12; depth++)
             {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
+                var candidate = Path.Combine(dir.FullName, "opensoul.mjs");
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
 
-            using var proc = Process.Start(psi);
-            if (proc is null) return null;
-
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-
-            if (proc.ExitCode == 0 && !string.IsNullOrEmpty(output))
-            {
-                var opensoulPath = Path.Combine(output, "opensoul", "opensoul.mjs");
-                return File.Exists(opensoulPath) ? opensoulPath : null;
+                dir = dir.Parent;
             }
         }
-        catch { }
+        catch
+        {
+            // Ignore discovery errors and continue with other strategies.
+        }
+
+        return null;
+    }
+
+    private static string? FindGlobalNpmPackage()
+    {
+        foreach (var npmCommand in new[] { "npm.cmd", "npm" })
+        {
+            try
+            {
+                var psi = new ProcessStartInfo(npmCommand, "root -g")
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+
+                using var proc = Process.Start(psi);
+                if (proc is null)
+                {
+                    continue;
+                }
+
+                var output = proc.StandardOutput.ReadToEnd().Trim();
+                proc.WaitForExit();
+
+                if (proc.ExitCode == 0 && !string.IsNullOrEmpty(output))
+                {
+                    var opensoulPath = Path.Combine(output, "opensoul", "opensoul.mjs");
+                    if (File.Exists(opensoulPath))
+                    {
+                        return opensoulPath;
+                    }
+                }
+            }
+            catch
+            {
+                // Try next command variant.
+            }
+        }
 
         return null;
     }
 
     private void OnGatewayExited(object? sender, EventArgs e)
     {
-        if (_gatewayProcess?.ExitCode != 0)
+        var process = _gatewayProcess;
+        if (process is not null && process.ExitCode != 0)
         {
-            _logger.LogWarning("Gateway process exited with code {Code}", _gatewayProcess?.ExitCode);
+            _logger.LogWarning("Gateway process exited with code {Code}", process.ExitCode);
         }
+
+        process?.Dispose();
+        _gatewayProcess = null;
+
+        DeleteRuntimeMetadataFiles(keepToken: true);
+
+        Port = null;
+        _gatewayToken = null;
         SetStatus(GatewayStatus.Stopped);
     }
 
@@ -375,3 +620,5 @@ public enum GatewayStatus
     Running,
     Failed,
 }
+
+

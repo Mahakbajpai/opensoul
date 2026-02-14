@@ -2,16 +2,19 @@ namespace OpenSoul.Gateway;
 
 /// <summary>
 /// Resolves OpenSoul file system paths on Windows.
-/// Mirrors OpenSoulPaths.swift — uses %USERPROFILE%\.opensoul\ as the state directory.
+/// Uses an app-specific state directory to avoid conflicting with global CLI state.
 /// </summary>
 public static class OpenSoulPaths
 {
     /// <summary>
-    /// State directory: %OPENSOUL_STATE_DIR% or %USERPROFILE%\.opensoul\
+    /// State directory: %OPENSOUL_STATE_DIR% or %LOCALAPPDATA%\OpenSoul\state\
     /// </summary>
     public static string StateDir =>
         Environment.GetEnvironmentVariable("OPENSOUL_STATE_DIR")
-        ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".opensoul");
+        ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "OpenSoul",
+            "state");
 
     /// <summary>
     /// Config file: %OPENSOUL_CONFIG_PATH% or {StateDir}\opensoul.json
@@ -31,6 +34,9 @@ public static class OpenSoulPaths
 
     /// <summary>Gateway port file: {StateDir}\gateway.port</summary>
     public static string GatewayPortFile => Path.Combine(StateDir, "gateway.port");
+
+    /// <summary>Gateway token file: {StateDir}\gateway.token</summary>
+    public static string GatewayTokenFile => Path.Combine(StateDir, "gateway.token");
 
     /// <summary>Settings file (Windows-specific, stored in AppData)</summary>
     public static string SettingsPath =>
