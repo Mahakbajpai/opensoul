@@ -235,9 +235,16 @@ public partial class MainWindow : Window
             _logger.LogWarning(ex, "Error stopping control channel");
         }
 
+        // If there's a pending update, apply it on exit
+        if (_updateService.HasPendingUpdate)
+        {
+            _updateService.ApplyUpdateOnExit();
+        }
+
         // Cleanup services
         try
         {
+            _updateService.StopBackgroundChecks();
             _hotkeyService.Dispose();
             _bridgeService.Dispose();
             _notificationService.Dispose();
@@ -1149,6 +1156,43 @@ public partial class MainWindow : Window
                     break;
             }
         });
+    }
+
+    // ═══════════ AUTO-UPDATE ═══════════
+
+    private void OnUpdateReady(string newVersion)
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            _logger.LogInformation("Update v{Version} ready to install", newVersion);
+
+            // Show a native toast notification
+            _notificationService.Show(
+                "Update Available",
+                $"OpenSoul v{newVersion} is ready. Restart to apply the update.",
+                "update");
+
+            // Update the tray menu to reflect available update
+            TrayMenuStatusItem.Header = $"OpenSoul — Update v{newVersion} ready";
+            TrayMenuUpdate.Header = $"Update to v{newVersion} && Restart";
+            TrayMenuUpdate.Visibility = Visibility.Visible;
+        });
+    }
+
+    private void TrayMenuUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyUpdateAndRestart();
+    }
+
+    /// <summary>Apply a pending update and restart the application.</summary>
+    private async void ApplyUpdateAndRestart()
+    {
+        if (!_updateService.HasPendingUpdate) return;
+
+        // Save window state before restart
+        await _windowStateService.SaveAsync(this);
+
+        _updateService.ApplyUpdateAndRestart();
     }
 
     // ═══════════ WEBVIEW2 FALLBACK ═══════════

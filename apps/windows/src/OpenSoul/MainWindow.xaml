@@ -137,6 +137,11 @@
                               Header="Settings..."
                               InputGestureText="Ctrl+,"
                               Click="TrayMenuSettings_Click" />
+                    <MenuItem x:Name="TrayMenuUpdate"
+                              Header="Update &amp; Restart"
+                              Visibility="Collapsed"
+                              FontWeight="SemiBold"
+                              Click="TrayMenuUpdate_Click" />
                     <MenuItem x:Name="TrayMenuAbout"
                               Header="About OpenSoul"
                               Click="TrayMenuAbout_Click" />

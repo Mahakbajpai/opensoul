@@ -14,14 +14,7 @@ public partial class App : Application
     {
         // Velopack: must be called early in startup, before any UI is created.
         // Handles install/uninstall/update hooks that run silently.
-        VelopackApp.Build()
-            .WithFirstRun(v =>
-            {
-                // First run after fresh install — could show onboarding, etc.
-                System.Diagnostics.Debug.WriteLine(
-                    $"[OpenSoul] First run after install (v{v})");
-            })
-            .Run();
+        VelopackApp.Build().Run();
 
         base.OnStartup(e);
 
