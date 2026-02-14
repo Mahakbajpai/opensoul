@@ -1,4 +1,4 @@
-param(
+﻿param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
     [string]$InstallDir = "$env:LOCALAPPDATA\Programs\OpenSoul",
@@ -12,6 +12,7 @@ $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $solutionPath = Join-Path $scriptRoot "OpenSoul.sln"
 $publishDir = Join-Path $scriptRoot ("src\OpenSoul\bin\{0}\net8.0-windows10.0.19041.0\publish" -f $Configuration)
 $exePath = Join-Path $publishDir "OpenSoul.exe"
+$iconSource = Join-Path $scriptRoot "src\OpenSoul\Resources\opensoul.ico"
 
 Write-Host "[install] configuration: $Configuration"
 Write-Host "[install] install dir:   $InstallDir"
@@ -42,6 +43,11 @@ if (-not (Test-Path $installedExe)) {
     throw "Installed exe not found: $installedExe"
 }
 
+$installedIcon = Join-Path $InstallDir "girl.ico"
+if (Test-Path $iconSource) {
+    Copy-Item -Path $iconSource -Destination $installedIcon -Force
+}
+
 $programsDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
 $startMenuDir = Join-Path $programsDir "OpenSoul"
 if (-not (Test-Path $startMenuDir)) {
@@ -50,11 +56,13 @@ if (-not (Test-Path $startMenuDir)) {
 
 $wsh = New-Object -ComObject WScript.Shell
 
+$shortcutIcon = if (Test-Path $installedIcon) { "$installedIcon,0" } else { "$installedExe,0" }
+
 $startShortcut = Join-Path $startMenuDir "OpenSoul.lnk"
 $startLink = $wsh.CreateShortcut($startShortcut)
 $startLink.TargetPath = $installedExe
 $startLink.WorkingDirectory = $InstallDir
-$startLink.IconLocation = "$installedExe,0"
+$startLink.IconLocation = $shortcutIcon
 $startLink.Description = "OpenSoul Desktop"
 $startLink.Save()
 
@@ -64,9 +72,16 @@ if (-not $NoDesktopShortcut) {
     $desktopLink = $wsh.CreateShortcut($desktopShortcut)
     $desktopLink.TargetPath = $installedExe
     $desktopLink.WorkingDirectory = $InstallDir
-    $desktopLink.IconLocation = "$installedExe,0"
+    $desktopLink.IconLocation = $shortcutIcon
     $desktopLink.Description = "OpenSoul Desktop"
     $desktopLink.Save()
+}
+
+# Ask shell to refresh icon overlays/cache hints.
+try {
+    Start-Process -FilePath "ie4uinit.exe" -ArgumentList "-show" -WindowStyle Hidden | Out-Null
+} catch {
+    Write-Verbose "ie4uinit refresh skipped"
 }
 
 # Probe launch once to verify installed binary starts.
@@ -82,6 +97,7 @@ if ($proc.HasExited) {
 
 Write-Host "[install] done"
 Write-Host "[install] exe: $installedExe"
+Write-Host "[install] icon: $shortcutIcon"
 Write-Host "[install] start menu: $startShortcut"
 if (-not $NoDesktopShortcut) {
     Write-Host "[install] desktop: $([Environment]::GetFolderPath("Desktop"))\\OpenSoul.lnk"
