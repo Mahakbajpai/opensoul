@@ -454,20 +454,21 @@
   justify-content: space-between;
   gap: 16px;
   padding: 4px 8px;
-  overflow: hidden;
+  overflow: visible;
   transform-origin: top center;
   transition:
     opacity var(--shell-focus-duration) var(--shell-focus-ease),
     transform var(--shell-focus-duration) var(--shell-focus-ease),
     max-height var(--shell-focus-duration) var(--shell-focus-ease),
     padding var(--shell-focus-duration) var(--shell-focus-ease);
-  max-height: 80px;
+  max-height: none;
 }
 
 .shell--chat-focus .content-header {
   opacity: 0;
   transform: translateY(-8px);
   max-height: 0px;
+  overflow: hidden;
   padding: 0;
   pointer-events: none;
 }
