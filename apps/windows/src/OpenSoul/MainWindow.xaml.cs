@@ -32,6 +32,7 @@ public partial class MainWindow : Window
     private readonly HotkeyService _hotkeyService;
     private readonly BackdropService _backdropService;
     private readonly UpdateService _updateService;
+    private readonly DeepLinkService _deepLinkService;
 
     // --- State ---
     private AppSettings _settings = new();
@@ -60,6 +61,7 @@ public partial class MainWindow : Window
         _hotkeyService = new HotkeyService(_loggerFactory.CreateLogger<HotkeyService>());
         _backdropService = new BackdropService(_loggerFactory.CreateLogger<BackdropService>());
         _updateService = new UpdateService(_loggerFactory.CreateLogger<UpdateService>());
+        _deepLinkService = new DeepLinkService(_loggerFactory.CreateLogger<DeepLinkService>());
 
         // Create gateway infrastructure
         var nodeLocator = new NodeLocator(_loggerFactory.CreateLogger<NodeLocator>());
@@ -141,6 +143,11 @@ public partial class MainWindow : Window
         // Register system-wide global hotkeys (Ctrl+Shift+O, Ctrl+Shift+C)
         _hotkeyService.Register(this);
 
+        // Register opensoul:// protocol and start deep link listener
+        _deepLinkService.RegisterProtocol();
+        _deepLinkService.LinkReceived += OnDeepLinkReceived;
+        _deepLinkService.StartListening();
+
         // Start background update checks (Velopack)
         _updateService.UpdateReady += OnUpdateReady;
         _updateService.StartBackgroundChecks();
@@ -153,6 +160,23 @@ public partial class MainWindow : Window
         if (_settings.AutoConnectOnLaunch)
         {
             await ConnectGatewayAsync();
+        }
+
+        // Process command-line deep link (e.g., --deeplink opensoul://chat)
+        ProcessStartupDeepLink();
+    }
+
+    /// <summary>Handle deep link from command-line args (--deeplink URI).</summary>
+    private void ProcessStartupDeepLink()
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (var i = 0; i < args.Length - 1; i++)
+        {
+            if (string.Equals(args[i], "--deeplink", StringComparison.OrdinalIgnoreCase))
+            {
+                _deepLinkService.HandleUri(args[i + 1]);
+                break;
+            }
         }
     }
 
@@ -245,6 +269,7 @@ public partial class MainWindow : Window
         try
         {
             _updateService.StopBackgroundChecks();
+            _deepLinkService.Dispose();
             _hotkeyService.Dispose();
             _bridgeService.Dispose();
             _notificationService.Dispose();
@@ -922,6 +947,51 @@ public partial class MainWindow : Window
         OpenSettingsWindow();
     }
 
+    private void TrayMenuDevices_Click(object sender, RoutedEventArgs e)
+    {
+        ShowAndFocusWindow();
+        _ = _bridgeService.SendNavigateAsync("devices");
+    }
+
+    private async void TrayMenuGatewayRestart_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _controlChannel.StopAsync(stopGateway: true);
+            await ConnectGatewayAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to restart gateway");
+        }
+    }
+
+    private async void TrayMenuGatewayStop_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _controlChannel.StopAsync(stopGateway: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to stop gateway");
+        }
+    }
+
+    private void TrayMenuNewChat_Click(object sender, RoutedEventArgs e)
+    {
+        ShowAndFocusWindow();
+        _ = _bridgeService.SendNavigateAsync("chat");
+        // Signal WebView2 to start a fresh chat session
+        _ = _bridgeService.SendFocusAsync("chat-input");
+    }
+
+    private void TrayMenuShortcuts_Click(object sender, RoutedEventArgs e)
+    {
+        ShowAndFocusWindow();
+        ToggleShortcutOverlay();
+    }
+
     private void TrayMenuAbout_Click(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(
@@ -1052,6 +1122,11 @@ public partial class MainWindow : Window
             }));
         }
 
+        // Ctrl+/ → Shortcut overlay
+        var overlayCmd = new RoutedCommand();
+        overlayCmd.InputGestures.Add(new KeyGesture(Key.Oem2, ModifierKeys.Control));
+        bindings.Add(new CommandBinding(overlayCmd, (_, _) => ToggleShortcutOverlay()));
+
         // F11 → Toggle fullscreen
         var fullscreenCmd = new RoutedCommand();
         fullscreenCmd.InputGestures.Add(new KeyGesture(Key.F11));
@@ -1078,6 +1153,28 @@ public partial class MainWindow : Window
         {
             WindowState = WindowState.Maximized;
         }
+    }
+
+    // ═══════════ SHORTCUT OVERLAY ═══════════
+
+    private Windows.ShortcutOverlay? _shortcutOverlay;
+
+    private void ToggleShortcutOverlay()
+    {
+        // If already open, close it
+        if (_shortcutOverlay is not null && _shortcutOverlay.IsLoaded)
+        {
+            _shortcutOverlay.CloseAnimated();
+            _shortcutOverlay = null;
+            return;
+        }
+
+        _shortcutOverlay = new Windows.ShortcutOverlay
+        {
+            Owner = this,
+        };
+        _shortcutOverlay.Closed += (_, _) => _shortcutOverlay = null;
+        _shortcutOverlay.ShowAnimated();
     }
 
     // ═══════════ SETTINGS WINDOW ═══════════
@@ -1153,6 +1250,51 @@ public partial class MainWindow : Window
                 default:
                     // Try to navigate to the action as a tab
                     _ = _bridgeService.SendNavigateAsync(action);
+                    break;
+            }
+        });
+    }
+
+    // ═══════════ DEEP LINK ═══════════
+
+    private void OnDeepLinkReceived(DeepLinkAction action)
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            _logger.LogInformation("Handling deep link: {Type} → {Param}", action.Type, action.Parameter);
+
+            // Always bring window to front
+            ShowAndFocusWindow();
+
+            switch (action.Type)
+            {
+                case DeepLinkType.Navigate:
+                    if (!string.IsNullOrEmpty(action.Parameter))
+                    {
+                        _ = _bridgeService.SendNavigateAsync(action.Parameter);
+
+                        // If extra param (e.g., session key for chat), forward it
+                        if (!string.IsNullOrEmpty(action.Extra))
+                        {
+                            _ = _bridgeService.SendSettingsChangedAsync(new
+                            {
+                                sessionKey = action.Extra,
+                            });
+                        }
+                    }
+                    break;
+
+                case DeepLinkType.OpenSettings:
+                    OpenSettingsWindow();
+                    break;
+
+                case DeepLinkType.Connect:
+                    if (!string.IsNullOrEmpty(action.Parameter))
+                    {
+                        _settings.RemoteUrl = action.Parameter;
+                        _settings.ConnectionMode = "Remote";
+                        _ = ConnectGatewayAsync();
+                    }
                     break;
             }
         });

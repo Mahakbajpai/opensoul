@@ -1,0 +1,236 @@
+<Window x:Class="OpenSoul.Windows.ShortcutOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Keyboard Shortcuts"
+        Width="520"
+        Height="460"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Topmost="True"
+        KeyDown="Window_KeyDown"
+        Deactivated="Window_Deactivated">
+
+    <Window.Resources>
+        <!-- Keyboard badge style -->
+        <Style x:Key="Kbd" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource PanelStrongBrush}" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="KbdText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedStrongBrush}" />
+        </Style>
+        <Style x:Key="ActionText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="ScopeText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Small, Segoe UI" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </Window.Resources>
+
+    <!-- Outer border with drop shadow and rounded corners -->
+    <Border CornerRadius="12"
+            Background="{DynamicResource ShellBgBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            Padding="0">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="4"
+                              Opacity="0.35" Color="#000000" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- ═══ Header ═══ -->
+            <StackPanel Grid.Row="0" Margin="20,16,20,12">
+                <TextBlock Text="Keyboard Shortcuts"
+                           FontSize="16" FontWeight="SemiBold"
+                           FontFamily="Segoe UI Variable Display, Segoe UI"
+                           Foreground="{DynamicResource TextBrush}" />
+                <TextBlock Text="Press any shortcut to use it, or Esc to close"
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedBrush}"
+                           FontFamily="Segoe UI Variable Small, Segoe UI"
+                           Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom"
+                    Background="{DynamicResource BorderBrush}" />
+
+            <!-- ═══ Shortcuts list ═══ -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Margin="0,4,0,4">
+                <StackPanel Margin="20,8,20,8">
+
+                    <!-- Section: Global -->
+                    <TextBlock Text="GLOBAL"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource MutedBrush}"
+                               FontFamily="Segoe UI Variable Small, Segoe UI"
+                               Margin="0,0,0,8" />
+
+                    <!-- Toggle window -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Toggle main window" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Shift" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="O" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Open chat -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Open chat" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Shift" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="C" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Divider -->
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,4,0,12" />
+
+                    <!-- Section: Window -->
+                    <TextBlock Text="WINDOW"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource MutedBrush}"
+                               FontFamily="Segoe UI Variable Small, Segoe UI"
+                               Margin="0,0,0,8" />
+
+                    <!-- Command palette -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Command palette" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="K" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Dashboard -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Open dashboard" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="D" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Switch tabs -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Switch to Chat / Overview / Devices / Config" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="1–4" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Settings -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Open settings" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="," Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Fullscreen -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Toggle fullscreen" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="F11" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Shortcut overlay -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Show this overlay" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="/" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Quit -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Quit application" Style="{StaticResource ActionText}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Ctrl" Style="{StaticResource KbdText}" /></Border>
+                            <Border Style="{StaticResource Kbd}"><TextBlock Text="Q" Style="{StaticResource KbdText}" /></Border>
+                        </StackPanel>
+                    </Grid>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ═══ Footer ═══ -->
+            <Border Grid.Row="2" Height="1" VerticalAlignment="Top"
+                    Background="{DynamicResource BorderBrush}" />
+            <TextBlock Grid.Row="2"
+                       Text="Press Esc or Ctrl+/ to close"
+                       FontSize="11"
+                       Foreground="{DynamicResource MutedBrush}"
+                       FontFamily="Segoe UI Variable Small, Segoe UI"
+                       HorizontalAlignment="Center"
+                       Margin="0,10,0,12" />
+        </Grid>
+    </Border>
+</Window>

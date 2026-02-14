@@ -120,6 +120,8 @@
                               FontWeight="SemiBold"
                               IsEnabled="False" />
                     <Separator />
+
+                    <!-- Quick navigation -->
                     <MenuItem x:Name="TrayMenuDashboard"
                               Header="Open Dashboard"
                               InputGestureText="Ctrl+D"
@@ -128,11 +130,36 @@
                               Header="Open Chat"
                               InputGestureText="Ctrl+Shift+C"
                               Click="TrayMenuChat_Click" />
+                    <MenuItem Header="Open Devices"
+                              Click="TrayMenuDevices_Click" />
                     <Separator />
+
+                    <!-- Gateway controls -->
                     <MenuItem x:Name="TrayMenuGatewayStatus"
                               Header="Gateway: Disconnected"
                               IsEnabled="False" />
+                    <MenuItem x:Name="TrayMenuGatewayRestart"
+                              Header="Restart Gateway"
+                              Click="TrayMenuGatewayRestart_Click" />
+                    <MenuItem x:Name="TrayMenuGatewayStop"
+                              Header="Stop Gateway"
+                              Click="TrayMenuGatewayStop_Click" />
                     <Separator />
+
+                    <!-- Quick actions submenu -->
+                    <MenuItem Header="Quick Actions">
+                        <MenuItem Header="New Chat Session"
+                                  Click="TrayMenuNewChat_Click" />
+                        <MenuItem Header="Show Shortcuts"
+                                  InputGestureText="Ctrl+/"
+                                  Click="TrayMenuShortcuts_Click" />
+                        <Separator />
+                        <MenuItem Header="Toggle Theme"
+                                  Click="ThemeToggleButton_Click" />
+                    </MenuItem>
+                    <Separator />
+
+                    <!-- Settings and meta -->
                     <MenuItem x:Name="TrayMenuSettings"
                               Header="Settings..."
                               InputGestureText="Ctrl+,"
